@@ -12,7 +12,7 @@ If you would like to support development, you can [donate via PayPal](https://ww
 
 ## Source-code licensing
 
-Commercial use of the source code requires a separate paid agreement or license. Consult the license file for the applicable source-code terms, once provided. This is separate from permission to use the application itself.
+Commercial use of the source code requires a separate paid agreement or license. See the [source-code terms](LICENSE.md) and the separate [application terms](APPLICATION-TERMS.md).
 
 ## Build and test
 
