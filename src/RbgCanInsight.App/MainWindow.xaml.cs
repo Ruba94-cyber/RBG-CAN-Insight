@@ -508,6 +508,9 @@ public partial class MainWindow : Window
 
     private void OnQuickTourClick(object sender, RoutedEventArgs e) => OpenOnboardingTour();
 
+    private void OnLicenseClick(object sender, RoutedEventArgs e) =>
+        new LicenseWindow { Owner = this }.ShowDialog();
+
     /// <summary>One non-modal guide at a time; repeatedly pressing F1
     /// brings the existing tour forward instead of spawning duplicates.</summary>
     private void OpenOnboardingTour()

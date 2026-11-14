@@ -2,6 +2,26 @@
 
 RBG CAN Insight is designed around a simple offline workflow: load a trace, load one or more DBC files, inspect decoded signals, analyze changes, then optionally correlate diagnostic DIDs to CAN signals.
 
+## License and commercial use
+
+For a future release that expressly adopts the accompanying application terms,
+personal study, learning, hobby activities and non-commercial personal projects
+are free. Work or business use—including internal company use, employees' work,
+consulting, professional laboratories and paid services—requires a separate
+paid commercial license. Contact **paolo.ruba.1913@gmail.com** for an agreement;
+donations are optional and do not grant commercial rights. Source-code reuse
+requires separate authorization.
+
+In a release containing this feature, expand **Session & tools** and select
+**License and commercial use** to read the terms included with that version and
+find the commercial contact. The terms are available offline; the contact link
+opens the device's configured email application.
+
+These conditions do not retroactively alter rights granted for earlier releases.
+GitHub release **v5.1.0** expressly allowed free business use and retains its
+own terms. Previously acquired Microsoft Store versions remain subject to their
+applicable Store and developer terms; consult the terms of the version used.
+
 ## 0. First Launch — Interactive Tour
 
 The first time the app starts it opens a short interactive tour (in English) that walks
@@ -451,7 +471,7 @@ custom order is remembered between launches. This changes only visual order: sav
 navigation commands and workspace identities remain stable.
 
 The **Session & tools** expander contains Save/Load session, presets, report export, layouts,
-theme, Quick tour and About. It starts collapsed and remembers its state, preventing occasional
+theme, Quick tour, About, and License and commercial use. It starts collapsed and remembers its state, preventing occasional
 commands from taking permanent vertical space on a small display.
 
 In Trace, drag the horizontal splitter immediately below the density overview to resize the

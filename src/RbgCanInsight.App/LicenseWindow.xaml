@@ -1,0 +1,29 @@
+<Window x:Class="RbgCanInsight.App.LicenseWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="License and commercial use" Width="720" Height="600" MinWidth="400" MinHeight="320"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{DynamicResource BackgroundBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}">
+  <Grid Margin="20">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+    <TextBlock FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"
+               Text="License and commercial use" />
+    <TextBlock Grid.Row="1" Margin="0,10,0,0" TextWrapping="Wrap"
+               Text="Free for personal and non-commercial use. Commercial use requires a separate paid license." />
+    <TextBlock Grid.Row="2" Margin="0,8,0,12" TextWrapping="Wrap">
+      Commercial licensing: <Hyperlink Foreground="{DynamicResource AccentBrush}" NavigateUri="mailto:paolo.ruba.1913@gmail.com" RequestNavigate="OnContactNavigate">paolo.ruba.1913@gmail.com</Hyperlink>
+    </TextBlock>
+    <TextBox x:Name="TermsText" Grid.Row="3" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+             Background="{DynamicResource SurfaceInputBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+             VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+             AutomationProperties.AutomationId="license.terms" />
+    <Button Grid.Row="4" Content="Close" IsCancel="True" HorizontalAlignment="Right" MinWidth="90" Margin="0,12,0,0" />
+  </Grid>
+</Window>

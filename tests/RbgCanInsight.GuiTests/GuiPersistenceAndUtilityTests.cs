@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Text.Json;
+using FlaUI.Core.Capturing;
 using FlaUI.Core.Definitions;
 using Xunit;
 
@@ -194,6 +195,34 @@ public sealed class GuiPersistenceAndUtilityTests
         dialog.Close();
         ui.Until(() => !ui.IsWindowOpen("About RBG CAN Insight")
             ? "closed" : null, "about dialog close");
+        ui.Navigate("nav.trace");
+        Assert.NotNull(ui.Visible("trace.grid"));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public void LicenseDialog_ShowsBundledTermsAndPreservesOfflineWorkspace(int themeIndex)
+    {
+        using var ui = new GuiSession(themeIndex: themeIndex);
+        OpenUtilities(ui);
+        ui.Click("utilities.license");
+        var dialog = ui.WindowWithTitle("License and commercial use");
+        var terms = dialog.FindFirstDescendant(cf => cf.ByAutomationId("license.terms"));
+        Assert.NotNull(terms);
+        var text = terms.AsTextBox().Text;
+        Assert.Contains("separate paid commercial license", text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("paolo.ruba.1913@gmail.com", text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("v5.1.0", text, StringComparison.OrdinalIgnoreCase);
+        var screenshots = Environment.GetEnvironmentVariable("RBG_LICENSE_SCREENSHOT_DIR");
+        if (!string.IsNullOrWhiteSpace(screenshots))
+        {
+            Directory.CreateDirectory(screenshots);
+            Capture.Element(dialog).ToFile(Path.Combine(screenshots, $"license-theme-{themeIndex}.png"));
+        }
+        dialog.FindFirstDescendant(cf => cf.ByName("Close"))!.AsButton().Invoke();
+        ui.Until(() => !ui.IsWindowOpen("License and commercial use") ? "closed" : null,
+            "license dialog close");
         ui.Navigate("nav.trace");
         Assert.NotNull(ui.Visible("trace.grid"));
     }

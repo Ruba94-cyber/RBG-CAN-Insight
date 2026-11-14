@@ -12,6 +12,7 @@
   <ItemGroup>
     <Resource Include="Assets\RbgCanInsight.ico" />
     <Resource Include="Assets\RbgCanInsight.png" />
+    <EmbeddedResource Include="..\..\APPLICATION-TERMS.md" LogicalName="RbgCanInsight.ApplicationTerms.md" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RbgCanInsight.Domain\RbgCanInsight.Domain.csproj" />

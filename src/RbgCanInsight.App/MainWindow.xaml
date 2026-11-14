@@ -219,6 +219,8 @@
                   ToolTip="Replay the interactive first-launch tour of every workspace" />
           <Button Content="About" AutomationProperties.AutomationId="utilities.about" Style="{StaticResource SubtleButton}" HorizontalAlignment="Left"
                   Command="{Binding AboutCommand}" ToolTip="Version and credits" />
+          <Button Content="License and commercial use" AutomationProperties.AutomationId="utilities.license" Style="{StaticResource SubtleButton}" HorizontalAlignment="Left"
+                  Click="OnLicenseClick" ToolTip="Read the application terms included with this version" />
           <TextBlock Text="{Binding DesignerCredit}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,4,0,0" />
         </StackPanel>
         </ScrollViewer>
