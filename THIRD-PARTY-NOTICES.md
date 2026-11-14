@@ -4,6 +4,8 @@ This document identifies dependencies referenced by the source and the runtime f
 
 ## Application
 
+The packaging scripts now pin .NET runtime 10.0.15 and include the license and notice files under `third-party/dotnet-10.0.15`, copied from the corresponding `Microsoft.NETCore.App.Runtime.win-x64` and `Microsoft.WindowsDesktop.App.Runtime.win-x64` NuGet packages. The WindowsDesktop package did not include a separate third-party notice file. Review the applicable distribution terms and notices before releasing each artifact.
+
 The application project has no direct or transitive NuGet package references for `net10.0-windows` in the examined restore. It uses .NET and Windows Desktop/WPF. The examined self-contained Store candidate contains `Microsoft.NETCore.App` and `Microsoft.WindowsDesktop.App` version 10.0.10, per its runtime configuration.
 
 Microsoft's [.NET license information](https://github.com/dotnet/core/blob/main/license-information.md) distinguishes source and package licensing from Windows product distributions; see the [.NET Library License](https://dotnet.microsoft.com/en-us/dotnet_library_license.htm) and the third-party notices for the exact runtime and desktop distribution being shipped. Self-contained executables include runtime components. For each binary release, identify its actual runtime versions and include all applicable license texts and third-party notices with that distribution; this repository inventory alone does not establish binary compliance. Runtime notice example: [.NET Runtime third-party notices](https://github.com/dotnet/runtime/blob/main/src/installer/pkg/THIRD-PARTY-NOTICES.TXT).

@@ -68,12 +68,18 @@ if (-not [string]::IsNullOrWhiteSpace($WixCli)) {
 
 Write-Host "Publishing $project ($Configuration, $Runtime, self-contained)..."
 if (Test-Path $publishDir) { Remove-Item $publishDir -Recurse -Force }
+& $DotnetExe clean (Join-Path $repoRoot 'RbgCanInsight.sln') -c $Configuration -v quiet
+if ($LASTEXITCODE -ne 0) { throw "dotnet clean failed with exit code $LASTEXITCODE" }
 & $DotnetExe publish $project `
     -c $Configuration -r $Runtime --self-contained true `
+    -p:RuntimeFrameworkVersion=10.0.15 `
+    "-target:Rebuild;Publish" `
     -p:PublishSingleFile=false `
-    -p:DebugType=embedded `
+    -p:DebugType=none `
+    -p:DebugSymbols=false `
     -o $publishDir
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXITCODE" }
+& (Join-Path $PSScriptRoot 'copy-distribution-notices.ps1') -Destination $publishDir -Configuration $Configuration -Runtime $Runtime -PublishDirectory $publishDir
 
 if (-not [string]::IsNullOrWhiteSpace($SignScript)) {
     # Authenticode-sign our own binaries (not the Microsoft runtime files) before they are packaged.
@@ -141,7 +147,7 @@ $fileIndex = 0
 Get-ChildItem $publishDir -File -Recurse | Sort-Object FullName | ForEach-Object {
     $fileIndex++
     $relative = [IO.Path]::GetRelativePath($publishDir, $_.FullName).Replace('\', '/')
-    $dirRelative = Split-Path $relative -Parent
+    $dirRelative = (Split-Path $relative -Parent) -replace '\\','/'
     if ($dirRelative -eq ".") { $dirRelative = "" }
     $dirId = $directories[$dirRelative]
     $componentId = "CMP_$fileIndex"
@@ -228,7 +234,10 @@ if (Test-Path $msiPath) { Remove-Item $msiPath -Force }
 & $wixExe build $wixSource -arch x64 -out $msiPath -pdbtype none
 if ($LASTEXITCODE -ne 0) { throw "wix build failed with exit code $LASTEXITCODE" }
 
-if (-not [string]::IsNullOrWhiteSpace($SignThumbprint)) {
+if (-not [string]::IsNullOrWhiteSpace($SignScript)) {
+    & pwsh -NoProfile -File $SignScript -FilePath $msiPath
+    if ($LASTEXITCODE -ne 0) { throw "MSI signing failed with exit code $LASTEXITCODE" }
+} elseif (-not [string]::IsNullOrWhiteSpace($SignThumbprint)) {
     $cert = Get-Item "Cert:\CurrentUser\My\$SignThumbprint" -ErrorAction Stop
     if (-not $cert.HasPrivateKey) { throw "Certificate $SignThumbprint has no private key." }
     $signTool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe -ErrorAction SilentlyContinue |

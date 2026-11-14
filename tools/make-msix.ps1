@@ -21,6 +21,7 @@ param(
     [string]$Configuration = "Release",
     [string]$Runtime = "win-x64",
     [string]$OutputRoot = "",
+    [string]$PackageVersionOverride = "",
     [string]$PackageName = "PaoloRubagotti.RBG-CAN-Insight",
     [string]$Publisher = "CN=10C6FB18-8DDB-4E06-BA21-3E1B0217DE01",
     [string]$PublisherDisplayName = "PaoloRubagotti",
@@ -49,6 +50,11 @@ $project = Join-Path $repoRoot "src\RbgCanInsight.App\RbgCanInsight.App.csproj"
 $version = $props.Project.PropertyGroup.Version | Select-Object -First 1
 if (-not $version) { $version = "0.0.0" }
 $packageVersion = if (($version -split '\.').Count -eq 3) { "$version.0" } else { $version }
+if (-not [string]::IsNullOrWhiteSpace($PackageVersionOverride)) {
+    if ($PackageVersionOverride -notmatch '^\d+\.\d+\.\d+\.\d+$') { throw 'PackageVersionOverride must have four numeric components.' }
+    $packageVersion = $PackageVersionOverride
+    $version = $PackageVersionOverride
+}
 
 $artifactRoot = if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
     Join-Path $repoRoot "artifacts\msix"
@@ -121,12 +127,14 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet clean failed with exit code $LASTEXITCO
 Write-Host "Publishing app layout..."
 & $DotnetExe publish $project `
     -c $Configuration -r $Runtime --self-contained true `
+    -p:RuntimeFrameworkVersion=10.0.15 `
     "-target:Rebuild;Publish" `
     -p:PublishSingleFile=false `
     -p:DebugType=none `
     -p:DebugSymbols=false `
     -o $layoutDir
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXITCODE" }
+& (Join-Path $PSScriptRoot 'copy-distribution-notices.ps1') -Destination $layoutDir -Configuration $Configuration -Runtime $Runtime -PublishDirectory $layoutDir
 
 if (-not [string]::IsNullOrWhiteSpace($SignScript)) {
     # Authenticode-sign our own binaries (not the Microsoft runtime files) before they are packaged.

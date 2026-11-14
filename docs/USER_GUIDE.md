@@ -871,7 +871,7 @@ not full file hashes, signatures or proof of OEM source authenticity.
 
 Use **Plot candidate** to send the selected mapping candidate directly to Signals and Plot.
 
-### Compare saved mappings (source on main; Windows GUI verification pending)
+### Compare saved mappings
 
 Choose **Compare saved maps…** in DID-CAN Mapping, then choose the
 baseline `.rbgmap.json` and the newer/current `.rbgmap.json`. The comparison
@@ -891,7 +891,7 @@ fingerprint covers only fields understood by the parser, not opaque OEM
 sections or file authenticity. This is a comparison aid, not independent
 confirmation of DID/CAN identity.
 
-### Compare DBC definitions (development source on main)
+### Compare DBC definitions
 
 Open the **DBC Manager** and choose **Compare DBCs…**. Select first the
 baseline DBC and then the updated DBC. A read-only, expandable table
@@ -919,12 +919,11 @@ rejected. The action clears stale DBC search filters and immediately
 opens the selected definition. A trace is still required for recorded
 on-bus evidence. A matching
 parsed definition does **not** prove unsupported vendor-specific
-statements or other opaque data are identical. Source is integrated
-on `main`; local .NET build, xUnit, GUI verifier, Excel opening,
-real OEM/Vector references and 13-inch DPI checks are still required
-before distribution.
+statements or other opaque data are identical. The comparison does not
+establish compatibility with every OEM or Vector database, or every display
+size and scaling setting.
 
-### Compare CDD, ODX and PDX definition versions (source on main)
+### Compare CDD, ODX and PDX definition versions
 
 In **UDS Analysis → Diagnostic Catalog**, choose **Compare CDD / ODX…**.
 Select the baseline description, then the current description. The operation
@@ -980,13 +979,14 @@ Engineering PARs are **not** evidence of verified response-record offsets,
 and unchanged parsed data does not certify opaque OEM sections or actual
 ECU behavior.
 
-This feature is source-only and has **not** passed the local Windows build,
-xUnit, GUI verification, Excel interoperability or representative OEM
-compatibility gate. Published v3.0.0 remains unchanged.
+Compatibility with representative OEM files and independent diagnostic tools
+is not established by the comparison alone; review exported results before
+relying on them.
 
-### Engineering Parameters and Sub-PARs (development source on main)
+### Engineering Parameters and Sub-PARs
 
-> These controls are currently in source development and are **not** included in the unchanged 3.0.0 release installer. Windows GUI and representative OEM CDD/ODX files are still required for validation.
+> Availability depends on the version you are running. Validate interpretation
+> against representative CDD/ODX files before relying on the results.
 
 With one or more CDD/ODX/PDX descriptions loaded, open the **Diagnostic Catalog** tab under UDS Analysis. Use the **ECU/variant selector** beside catalog search to focus one ECU; **PARs XLSX** and full diagnostic definitions XLSX follow both the ECU selector and current search. The selected-DID export remains scoped to the selected definition. The compact **Fields/PARs** count shows how many field definitions and source-backed engineering parameter nodes the application recovered for a DID. The right inspector separates **Declared fields** (physical decoding evidence) from **Engineering PARs** (source-backed nested definitions); select a PAR row to inspect its source ID, explicitly declared PAR code, origin, type, path, description and unresolved reference status.
 

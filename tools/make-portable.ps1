@@ -46,12 +46,17 @@ New-Item -ItemType Directory -Force $artifactRoot | Out-Null
 
 Write-Host "Publishing $project ($Configuration, $Runtime, single-file self-contained)..."
 if (Test-Path $publishDir) { Remove-Item $publishDir -Recurse -Force }
+& $DotnetExe clean (Join-Path $repoRoot 'RbgCanInsight.sln') -c $Configuration -v quiet
+if ($LASTEXITCODE -ne 0) { throw "dotnet clean failed with exit code $LASTEXITCODE" }
 & $DotnetExe publish $project `
     -c $Configuration -r $Runtime --self-contained true `
+    -p:RuntimeFrameworkVersion=10.0.15 `
+    "-target:Rebuild;Publish" `
     -p:PublishSingleFile=true `
     -p:IncludeNativeLibrariesForSelfExtract=true `
     -p:EnableCompressionInSingleFile=true `
-    -p:DebugType=embedded `
+    -p:DebugType=none `
+    -p:DebugSymbols=false `
     -o $publishDir
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXITCODE" }
 
@@ -67,6 +72,7 @@ New-Item -ItemType Directory -Force $releaseDir | Out-Null
 foreach ($sub in "config", "logs", "docs", "runtime") {
     New-Item -ItemType Directory -Force (Join-Path $releaseDir $sub) | Out-Null
 }
+& (Join-Path $PSScriptRoot 'copy-distribution-notices.ps1') -Destination $releaseDir -Configuration $Configuration -Runtime $Runtime -PublishDirectory $publishDir
 
 # Root: only the executable and the readme.
 Copy-Item (Join-Path $publishDir "RbgCanInsight.exe") $releaseDir
