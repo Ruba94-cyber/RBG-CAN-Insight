@@ -1,0 +1,122 @@
+<Window x:Class="RbgCanInsight.App.SignalChartsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:RbgCanInsight.App.Controls"
+        Title="Signal charts" Width="1000" Height="700" MinWidth="720" MinHeight="480"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BackgroundBrush}"
+        Icon="Assets/RbgCanInsight.png">
+  <TabControl x:Name="Tabs" Margin="12" AutomationProperties.AutomationId="charts.tabs" AutomationProperties.Name="Chart types">
+
+    <!-- ============================ Histogram ============================ -->
+    <TabItem Header="Histogram" AutomationProperties.AutomationId="charts.tab.histogram" AutomationProperties.Name="Histogram">
+      <DockPanel Margin="10">
+        <TextBlock DockPanel.Dock="Top" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8"
+                   Text="How much time the signal spent at each value. Pick a signal; each bar is a range of values and its height is the time (or number of samples) in that range."/>
+        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+          <TextBlock Text="Filter:" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="0,0,4,0" />
+          <TextBox x:Name="HistFilter" Width="150" Margin="0,0,6,0" ToolTip="Type to filter the signal list"
+                   AutomationProperties.AutomationId="charts.histogram.filter" AutomationProperties.Name="Filter histogram signals"/>
+          <ComboBox x:Name="HistSignal" Width="300" Margin="0,0,12,0" DisplayMemberPath="Label"
+                    AutomationProperties.AutomationId="charts.histogram.signal" AutomationProperties.Name="Histogram signal"/>
+          <TextBlock Text="Bins:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+          <TextBox x:Name="HistBins" Width="50" Text="20" Margin="0,0,12,0" ToolTip="Number of bars (1 to 500)"
+                   AutomationProperties.AutomationId="charts.histogram.bins" AutomationProperties.Name="Number of bins"/>
+          <TextBlock Text="Height shows:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+          <ComboBox x:Name="HistWeight" Width="190" SelectedIndex="0" Margin="0,0,12,0"
+                    AutomationProperties.AutomationId="charts.histogram.weighting" AutomationProperties.Name="Histogram weighting">
+            <ComboBoxItem Content="Time held (seconds)"/>
+            <ComboBoxItem Content="Per sample (count)"/>
+          </ComboBox>
+          <Button x:Name="HistRefresh" Content="Update" Click="OnHistogramUpdate"
+                  AutomationProperties.AutomationId="charts.histogram.update" AutomationProperties.Name="Update histogram"/>
+          <Button x:Name="HistExport" Content="Export CSV…" Margin="6,0,0,0" Click="OnHistogramExport"
+                  AutomationProperties.AutomationId="charts.histogram.export" AutomationProperties.Name="Export histogram CSV"/>
+        </WrapPanel>
+        <TextBlock x:Name="HistSummary" DockPanel.Dock="Top" TextWrapping="Wrap" Margin="0,0,0,8"
+                   AutomationProperties.AutomationId="charts.histogram.summary"/>
+        <controls:SimpleChart x:Name="HistChart" MinHeight="200"
+                              AutomationProperties.AutomationId="charts.histogram.chart" AutomationProperties.Name="Histogram chart"/>
+      </DockPanel>
+    </TabItem>
+
+    <!-- ============================== XY plot ============================ -->
+    <TabItem Header="XY plot" AutomationProperties.AutomationId="charts.tab.xy" AutomationProperties.Name="XY plot">
+      <DockPanel Margin="10">
+        <TextBlock DockPanel.Dock="Top" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8"
+                   Text="Does Y follow X? Each dot pairs the two signals at the same moment (the last known value is held between frames). A straight band of dots means they move together; the red line is the best straight-line fit."/>
+        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+          <TextBlock Text="X:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+          <TextBlock Text="Filter:" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="0,0,4,0" />
+          <TextBox x:Name="XyFilterX" Width="110" Margin="0,0,6,0" ToolTip="Type to filter the X signal list"
+                   AutomationProperties.AutomationId="charts.xy.filterX" AutomationProperties.Name="Filter X signals"/>
+          <ComboBox x:Name="XySignalX" Width="260" Margin="0,0,12,0" DisplayMemberPath="Label"
+                    AutomationProperties.AutomationId="charts.xy.signalX" AutomationProperties.Name="X signal"/>
+          <TextBlock Text="Y:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+          <TextBlock Text="Filter:" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="0,0,4,0" />
+          <TextBox x:Name="XyFilterY" Width="110" Margin="0,0,6,0" ToolTip="Type to filter the Y signal list"
+                   AutomationProperties.AutomationId="charts.xy.filterY" AutomationProperties.Name="Filter Y signals"/>
+          <ComboBox x:Name="XySignalY" Width="260" Margin="0,0,12,0" DisplayMemberPath="Label"
+                    AutomationProperties.AutomationId="charts.xy.signalY" AutomationProperties.Name="Y signal"/>
+          <Button x:Name="XyExport" Content="Export CSV…" Click="OnXyExport"
+                  AutomationProperties.AutomationId="charts.xy.export" AutomationProperties.Name="Export XY CSV"/>
+        </WrapPanel>
+        <TextBlock x:Name="XyCorrelation" DockPanel.Dock="Top" TextWrapping="Wrap" Margin="0,0,0,8"
+                   AutomationProperties.AutomationId="charts.xy.correlation"/>
+        <controls:SimpleChart x:Name="XyChart" MinHeight="200"
+                              AutomationProperties.AutomationId="charts.xy.chart" AutomationProperties.Name="XY scatter chart"/>
+      </DockPanel>
+    </TabItem>
+
+    <!-- ============================= Spectrum ============================ -->
+    <TabItem Header="Spectrum" AutomationProperties.AutomationId="charts.tab.spectrum" AutomationProperties.Name="Spectrum">
+      <DockPanel Margin="10">
+        <TextBlock DockPanel.Dock="Top" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8"
+                   Text="Which repeating rhythms hide in the signal? The spectrum shows how strongly each frequency (cycles per second) is present. Peaks mark oscillations such as a control loop hunting or a periodic disturbance."/>
+        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,4">
+          <TextBlock Text="Filter:" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="0,0,4,0" />
+          <TextBox x:Name="SpFilter" Width="130" Margin="0,0,6,0" ToolTip="Type to filter the signal list"
+                   AutomationProperties.AutomationId="charts.spectrum.filter" AutomationProperties.Name="Filter spectrum signals"/>
+          <ComboBox x:Name="SpSignal" Width="280" Margin="0,0,12,0" DisplayMemberPath="Label"
+                    AutomationProperties.AutomationId="charts.spectrum.signal" AutomationProperties.Name="Spectrum signal"/>
+          <TextBlock Text="Window:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+          <ComboBox x:Name="SpWindow" Width="120" Margin="0,0,12,0"
+                    AutomationProperties.AutomationId="charts.spectrum.window" AutomationProperties.Name="FFT window"
+                    ToolTip="Hann is a good default: it reduces leakage between neighbouring frequencies."/>
+          <TextBlock Text="Between frames:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+          <ComboBox x:Name="SpResample" Width="130" SelectedIndex="0" Margin="0,0,12,0"
+                    AutomationProperties.AutomationId="charts.spectrum.resample" AutomationProperties.Name="Resampling mode">
+            <ComboBoxItem Content="Hold last value"/>
+            <ComboBoxItem Content="Interpolate"/>
+          </ComboBox>
+          <CheckBox x:Name="SpRemoveMean" Content="Remove average" IsChecked="True" VerticalAlignment="Center" Margin="0,0,12,0"
+                    ToolTip="Removes the constant offset so it does not hide the oscillations."
+                    AutomationProperties.AutomationId="charts.spectrum.removeMean" AutomationProperties.Name="Remove average"/>
+        </WrapPanel>
+        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+          <TextBlock Text="Grid rate [Hz]:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+          <TextBox x:Name="SpRate" Width="90" Margin="0,0,6,0" KeyDown="OnSpectrumRateKeyDown"
+                   AutomationProperties.AutomationId="charts.spectrum.rate" AutomationProperties.Name="Grid rate in hertz"/>
+          <TextBlock Text="derived from the trace, editable" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+          <Button x:Name="SpCompute" Content="Compute" Click="OnSpectrumCompute" Margin="0,0,6,0"
+                  AutomationProperties.AutomationId="charts.spectrum.compute" AutomationProperties.Name="Compute spectrum"/>
+          <Button x:Name="SpExport" Content="Export CSV…" Click="OnSpectrumExport"
+                  AutomationProperties.AutomationId="charts.spectrum.export" AutomationProperties.Name="Export spectrum CSV"/>
+        </WrapPanel>
+        <TextBlock x:Name="SpMessage" DockPanel.Dock="Top" TextWrapping="Wrap" Margin="0,0,0,8"
+                   AutomationProperties.AutomationId="charts.spectrum.message" AutomationProperties.Name="Spectrum result"/>
+        <DataGrid x:Name="SpPeaks" DockPanel.Dock="Right" Width="270" Margin="10,0,0,0" IsReadOnly="True" AutoGenerateColumns="False"
+                  CanUserSortColumns="False" HeadersVisibility="Column"
+                  AutomationProperties.AutomationId="charts.spectrum.peaks" AutomationProperties.Name="Top 5 spectrum peaks">
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="Peak" Binding="{Binding Rank}" Width="48"/>
+            <DataGridTextColumn Header="Frequency [Hz]" Binding="{Binding Frequency}" Width="*"/>
+            <DataGridTextColumn Header="Amplitude" Binding="{Binding Amplitude}" Width="*"/>
+          </DataGrid.Columns>
+        </DataGrid>
+        <controls:SimpleChart x:Name="SpChart" MinHeight="200"
+                              AutomationProperties.AutomationId="charts.spectrum.chart" AutomationProperties.Name="Spectrum chart"/>
+      </DockPanel>
+    </TabItem>
+  </TabControl>
+</Window>

@@ -1,0 +1,17 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- stackalloc inside a loop grows the stack per iteration and crashes the process on long traces. -->
+    <WarningsAsErrors>$(WarningsAsErrors);CA2014</WarningsAsErrors>
+    <Product>RBG CAN Insight</Product>
+    <Authors>Paolo Rubagotti</Authors>
+    <Company>RBG</Company>
+    <Copyright>© 2026 Paolo Rubagotti. All rights reserved.</Copyright>
+    <Version>5.1.0</Version>
+    <AssemblyVersion>5.1.0.0</AssemblyVersion>
+    <FileVersion>5.1.0.0</FileVersion>
+    <Description>RBG CAN Insight — offline automotive CAN trace analysis studio. Designed by Paolo Rubagotti.</Description>
+  </PropertyGroup>
+</Project>

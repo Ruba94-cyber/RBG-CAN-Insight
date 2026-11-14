@@ -1,0 +1,887 @@
+<UserControl x:Class="RbgCanInsight.App.Views.DataStudioView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:common="clr-namespace:RbgCanInsight.App.Common"
+             xmlns:vm="clr-namespace:RbgCanInsight.App.ViewModels"
+             Loaded="OnStudioLoaded" SizeChanged="OnStudioSizeChanged">
+  <UserControl.Resources>
+    <common:IntEqualsToVisibilityConverter x:Key="SectionVisibility" />
+    <common:BoolToVisibilityConverter x:Key="VisibleWhenTrue" />
+    <common:BoolToVisibilityConverter x:Key="VisibleWhenNoData" Invert="True" />
+    <Style x:Key="StudioStep" TargetType="Button" BasedOn="{StaticResource SubtleButton}">
+      <Setter Property="Padding" Value="12,9" />
+      <Setter Property="Margin" Value="0,0,6,0" />
+      <Setter Property="MinHeight" Value="40" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="ToolTip" Value="Open this step in Data Studio" />
+    </Style>
+  </UserControl.Resources>
+
+  <Grid Margin="14">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <StackPanel Grid.Row="0" Margin="2,0,0,12">
+      <TextBlock Text="Data Studio" FontSize="22" FontWeight="SemiBold"
+                 AutomationProperties.AutomationId="studio.title" />
+      <TextBlock Text="A simple, guided workspace for offline CAN analysis — your original recordings never change."
+                 Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,4,0,0" />
+      <TextBlock Text="{Binding DataStudio.StepDescription}" FontWeight="SemiBold"
+                 FontSize="12" Margin="0,5,0,0"
+                 AutomationProperties.AutomationId="studio.stepDescription"/>
+    </StackPanel>
+
+    <!-- The sections are independent and explicit, not buried in an immense
+         advanced tab: every user can follow 1 → 2 → 3 → 4. -->
+    <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,12">
+      <Button Content="1 · Datasets"
+              AutomationProperties.AutomationId="studio.datasets"
+              Command="{Binding DataStudio.SelectSectionCommand}" CommandParameter="0"
+              ToolTip="Open files and select the exact recording to analyse">
+        <Button.Style>
+          <Style TargetType="Button" BasedOn="{StaticResource StudioStep}">
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding DataStudio.SectionIndex}" Value="0">
+                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                <Setter Property="BorderThickness" Value="2"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </Button.Style>
+      </Button>
+      <Button Content="2 · Analyses" AutomationProperties.AutomationId="studio.analyses"
+              Command="{Binding DataStudio.SelectSectionCommand}" CommandParameter="1">
+        <Button.Style>
+          <Style TargetType="Button" BasedOn="{StaticResource StudioStep}">
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding DataStudio.SectionIndex}" Value="1">
+                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                <Setter Property="BorderThickness" Value="2"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </Button.Style>
+      </Button>
+      <Button Content="3 · Results" AutomationProperties.AutomationId="studio.results"
+              Command="{Binding DataStudio.SelectSectionCommand}" CommandParameter="2">
+        <Button.Style>
+          <Style TargetType="Button" BasedOn="{StaticResource StudioStep}">
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding DataStudio.SectionIndex}" Value="2">
+                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                <Setter Property="BorderThickness" Value="2"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </Button.Style>
+      </Button>
+      <Button Content="4 · Compare" AutomationProperties.AutomationId="studio.compare"
+              Command="{Binding DataStudio.SelectSectionCommand}" CommandParameter="3">
+        <Button.Style>
+          <Style TargetType="Button" BasedOn="{StaticResource StudioStep}">
+            <Style.Triggers>
+              <DataTrigger Binding="{Binding DataStudio.SectionIndex}" Value="3">
+                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                <Setter Property="BorderThickness" Value="2"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+              </DataTrigger>
+            </Style.Triggers>
+          </Style>
+        </Button.Style>
+      </Button>
+    </UniformGrid>
+
+    <Grid Grid.Row="2">
+
+      <!-- DATASETS: manage physical recordings without showing advanced analysis
+           machinery. The Source explorer and Trace use the same source model. -->
+      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                    Visibility="{Binding DataStudio.SectionIndex, Converter={StaticResource SectionVisibility}, ConverterParameter=0}">
+        <StackPanel MaxWidth="1030" HorizontalAlignment="Stretch" Margin="2,0,10,10">
+          <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,10">
+            <StackPanel>
+              <TextBlock Text="Your recordings" FontSize="18" FontWeight="SemiBold"/>
+              <TextBlock Text="Start here. Open one or more ASC, BLF, TRC or MF4 files. You can explore them without modifying the originals."
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,6,0,12"/>
+              <WrapPanel>
+                <Button Content="Open recordings…" Style="{StaticResource AccentButton}"
+                        Command="{Binding OpenTraceCommand}"
+                        AutomationProperties.AutomationId="studio.openRecords" Margin="0,0,8,5"
+                        ToolTip="Choose one or multiple original trace files"/>
+                <Button Content="Add files…" Command="{Binding AddTraceFilesCommand}"
+                        IsEnabled="{Binding HasTraceWorkspace}" Margin="0,0,8,5"
+                        AutomationProperties.AutomationId="studio.addRecords"/>
+                <Button Content="Explore frames" Command="{Binding DataStudio.SelectSectionCommand}"
+                        CommandParameter="2" IsEnabled="{Binding IsTraceLoaded}" Margin="0,0,8,5"
+                        AutomationProperties.AutomationId="studio.exploreRecords"/>
+              </WrapPanel>
+              <TextBlock Text="{Binding TraceWorkspaceSummary}" Style="{StaticResource MutedText}"
+                         Margin="0,8,0,0" AutomationProperties.AutomationId="studio.datasetSummary"/>
+            </StackPanel>
+          </Border>
+          <Border Style="{StaticResource Card}" Padding="14">
+            <StackPanel>
+              <TextBlock Text="Source files" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,4"/>
+              <TextBlock Text="Use a file to focus the Results table. The combined dataset and the original evidence stay available."
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,9"/>
+              <ItemsControl ItemsSource="{Binding TraceWorkspaceEntries}"
+                            AutomationProperties.AutomationId="studio.sourceList">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="{x:Type vm:TraceWorkspaceEntry}">
+                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                            Padding="4,8">
+                      <DockPanel LastChildFill="True">
+                        <Button DockPanel.Dock="Right" Content="{Binding ActionLabel}"
+                              IsEnabled="{Binding CanView}"
+                              AutomationProperties.AutomationId="studio.viewSource"
+                              Command="{Binding DataContext.ViewTraceSourceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                              CommandParameter="{Binding}" Margin="8,0,0,0" Padding="10,5"
+                              ToolTip="Load this source independently or reload all sources; this may reimport recordings"/>
+                      <Button DockPanel.Dock="Right" Content="Explore"
+                                AutomationProperties.AutomationId="studio.focusSource"
+                                Command="{Binding DataContext.DataStudio.FocusSourceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}" Margin="12,0,0,0" Padding="10,5"
+                                ToolTip="See only this recording's frame rows in Results; no reimport"/>
+                        <StackPanel>
+                          <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"
+                                     TextTrimming="CharacterEllipsis" ToolTip="{Binding Description}"/>
+                          <TextBlock Text="{Binding Details}" Style="{StaticResource MutedText}"
+                                     TextTrimming="CharacterEllipsis" ToolTip="{Binding Description}"/>
+                        </StackPanel>
+                      </DockPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <TextBlock Text="Tip: If two independent loggers recorded the same CAN channel, choose Separate channels when importing to avoid mixing unrelated traffic."
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,12,0,0"/>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- ANALYSES: named notebook-like saved Trace views and notes. Notebooks
+           deliberately do not claim to provide independent Spark/SQL kernels. -->
+      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                    Visibility="{Binding DataStudio.SectionIndex, Converter={StaticResource SectionVisibility}, ConverterParameter=1}">
+        <StackPanel MaxWidth="1030" HorizontalAlignment="Stretch" Margin="2,0,10,10">
+          <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,10">
+            <StackPanel>
+              <TextBlock Text="My analyses" FontSize="18" FontWeight="SemiBold"/>
+              <TextBlock Text="Each analysis remembers one question, the exact recorded source and your notes. Switch between them without importing again."
+                         Style="{StaticResource MutedText}" Margin="0,6,0,12" TextWrapping="Wrap"/>
+              <WrapPanel>
+                <Button Content="+ New analysis" Style="{StaticResource AccentButton}"
+                        Command="{Binding DataStudio.CreateTabCommand}"
+                        IsEnabled="{Binding IsTraceLoaded}"
+                        AutomationProperties.AutomationId="studio.newAnalysis" Margin="0,0,8,5"/>
+                <Button Content="Save session…" Command="{Binding SaveSessionCommand}"
+                        IsEnabled="{Binding IsTraceLoaded}"
+                        AutomationProperties.AutomationId="studio.saveSession" Margin="0,0,8,5"
+                        ToolTip="Keep all analyses and referenced original recordings in one .rbgsession file"/>
+              </WrapPanel>
+            </StackPanel>
+          </Border>
+          <Border Style="{StaticResource Card}" Padding="14" Margin="0,0,0,10">
+            <StackPanel>
+              <TextBlock Text="Saved analyses" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,5"/>
+              <TextBlock Text="Save the recordings, filters and tabs you are working on, then reopen them later in one click. Only recipes and file fingerprints are stored, never CAN data. If a file is missing or changed you are told before anything is opened."
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+              <DockPanel Margin="0,0,0,8">
+                <Button DockPanel.Dock="Right" Content="Save analysis" Style="{StaticResource AccentButton}"
+                        Command="{Binding DataStudio.SaveAnalysisCommand}"
+                        IsEnabled="{Binding IsTraceLoaded}"
+                        AutomationProperties.AutomationId="studio.saveAnalysis" Margin="8,0,0,0" Padding="10,5"/>
+                <TextBox Text="{Binding DataStudio.SavedName, UpdateSourceTrigger=PropertyChanged}"
+                         AutomationProperties.AutomationId="studio.savedName"
+                         AutomationProperties.Name="Analysis name" ToolTip="Name for a new analysis, or a new name for the selected one"/>
+              </DockPanel>
+              <ListBox ItemsSource="{Binding DataStudio.SavedAnalyses}"
+                       SelectedItem="{Binding DataStudio.SelectedSavedAnalysis, Mode=TwoWay}"
+                       MaxHeight="180" AutomationProperties.AutomationId="studio.savedList">
+                <ListBox.ItemTemplate>
+                  <DataTemplate DataType="{x:Type vm:StudioSavedAnalysisRow}">
+                    <StackPanel>
+                      <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                      <TextBlock Text="{Binding Details}" Style="{StaticResource MutedText}" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+              <WrapPanel Margin="0,8,0,0">
+                <Button Content="Open saved" Command="{Binding DataStudio.OpenSavedCommand}"
+                        AutomationProperties.AutomationId="studio.openSaved" Margin="0,0,8,5" Padding="10,5"/>
+                <Button Content="Rename" Command="{Binding DataStudio.RenameSavedCommand}"
+                        AutomationProperties.AutomationId="studio.renameSaved" Margin="0,0,8,5" Padding="10,5"/>
+                <Button Content="Delete" Command="{Binding DataStudio.DeleteSavedCommand}"
+                        AutomationProperties.AutomationId="studio.deleteSaved" Margin="0,0,8,5" Padding="10,5"
+                        ToolTip="Deletes only the saved analysis, never the original recordings"/>
+              </WrapPanel>
+              <TextBlock Text="{Binding DataStudio.SavedStatus}" TextWrapping="Wrap" Margin="0,4,0,0"
+                         AutomationProperties.AutomationId="studio.savedStatus"/>
+            </StackPanel>
+          </Border>
+          <Border Style="{StaticResource Card}" Padding="14" Margin="0,0,0,10">
+            <StackPanel>
+              <TextBlock Text="{Binding Notebook.Summary}" FontWeight="SemiBold" Margin="0,0,0,7"/>
+              <ItemsControl ItemsSource="{Binding Notebook.Tabs}" AutomationProperties.AutomationId="studio.analysisList">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="{x:Type vm:TraceNotebookTabRow}">
+                    <DockPanel Margin="0,0,0,6">
+                      <Button Content="Open results" DockPanel.Dock="Right" MinWidth="100"
+                              AutomationProperties.AutomationId="studio.openAnalysis"
+                              Command="{Binding DataContext.DataStudio.OpenTabCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                              CommandParameter="{Binding}" Margin="10,0,0,0" Padding="8,5"
+                              ToolTip="{Binding Description}"/>
+                      <StackPanel>
+                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding Description}" Style="{StaticResource MutedText}"
+                                   TextTrimming="CharacterEllipsis" MaxWidth="550"/>
+                      </StackPanel>
+                    </DockPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+          <Border Style="{StaticResource Card}" Padding="14" Margin="0,0,0,10">
+            <StackPanel>
+              <TextBlock Text="Saved analysis cells" FontSize="15" FontWeight="SemiBold"
+                         Margin="0,0,0,5" />
+              <TextBlock Text="Open a saved cell to rerun its calculation using the original recording and the owning analysis tab's source/filter."
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8" />
+              <ItemsControl ItemsSource="{Binding Notebook.SavedCells}"
+                            AutomationProperties.AutomationId="studio.savedCells">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="{x:Type vm:TraceNotebookSavedCellRow}">
+                    <DockPanel Margin="0,0,0,7">
+                      <Button DockPanel.Dock="Right" Content="Remove"
+                              AutomationProperties.AutomationId="studio.removeCell"
+                              Command="{Binding DataContext.DataStudio.RemoveSavedCellCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                              CommandParameter="{Binding}" Margin="8,0,0,0" Padding="8,4"
+                              ToolTip="Remove this saved calculation, not the source data" />
+                      <Button DockPanel.Dock="Right" Content="Run again"
+                              AutomationProperties.AutomationId="studio.rerunCell"
+                              Command="{Binding DataContext.DataStudio.OpenSavedCellCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                              CommandParameter="{Binding}" Margin="8,0,0,0" Padding="8,4"
+                              ToolTip="Restore the exact saved source and filter, then recompute the summary" />
+                      <StackPanel>
+                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold"
+                                   TextTrimming="CharacterEllipsis" />
+                        <TextBlock Style="{StaticResource MutedText}">
+                          <Run Text="{Binding SourceTitle, Mode=OneWay}" />
+                          <Run Text=" · " />
+                          <Run Text="{Binding KindText, Mode=OneWay}" />
+                        </TextBlock>
+                      </StackPanel>
+                    </DockPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+          <Border Style="{StaticResource Card}" Padding="14">
+            <StackPanel>
+              <TextBlock Text="Edit selected analysis" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,10"/>
+              <TextBlock Text="Analysis name" Style="{StaticResource MutedText}" Margin="0,0,0,3"/>
+              <TextBox Text="{Binding Notebook.TitleDraft, UpdateSourceTrigger=PropertyChanged}"
+                       MaxLength="80" IsEnabled="{Binding Notebook.HasActive}"
+                       AutomationProperties.AutomationId="studio.analysisTitle" Margin="0,0,0,8"/>
+              <TextBlock Text="Notes and observations" Style="{StaticResource MutedText}" Margin="0,0,0,3"/>
+              <TextBox Text="{Binding Notebook.NotesDraft, UpdateSourceTrigger=PropertyChanged}"
+                       AcceptsReturn="True" TextWrapping="Wrap" Height="90" MaxLength="8192"
+                       IsEnabled="{Binding Notebook.HasActive}"
+                       AutomationProperties.AutomationId="studio.analysisNotes" Margin="0,0,0,8"/>
+              <WrapPanel>
+                <Button Content="Rename" Command="{Binding Notebook.RenameCommand}"
+                        IsEnabled="{Binding Notebook.HasActive}"
+                        AutomationProperties.AutomationId="studio.renameAnalysis" Margin="0,0,8,6"/>
+                <Button Content="Update saved view" Command="{Binding Notebook.UpdateCommand}"
+                        IsEnabled="{Binding Notebook.HasActive}"
+                        AutomationProperties.AutomationId="studio.updateAnalysis" Margin="0,0,8,6"
+                        ToolTip="Only Update saved view replaces the saved query or physical source with your current Results settings"/>
+                <Button Content="Duplicate" Command="{Binding Notebook.DuplicateCommand}"
+                        IsEnabled="{Binding Notebook.HasActive}"
+                        AutomationProperties.AutomationId="studio.duplicateAnalysis" Margin="0,0,8,6"/>
+                <Button Content="Close tab" Command="{Binding Notebook.CloseCommand}"
+                        IsEnabled="{Binding Notebook.HasActive}"
+                        AutomationProperties.AutomationId="studio.closeAnalysis" Margin="0,0,8,6"/>
+              </WrapPanel>
+              <TextBlock Text="Switching tabs saves your notes, but never overwrites a previously saved query. Choose Update saved view to make changes permanent."
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,5,0,0"/>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- RESULTS: fast virtualised table, same index and source provenance as
+           Trace. Show fewer columns and an obvious next action. -->
+      <Grid Visibility="{Binding DataStudio.SectionIndex, Converter={StaticResource SectionVisibility}, ConverterParameter=2}">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="*"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Border Grid.Row="0" Style="{StaticResource Card}" Padding="12" Margin="0,0,0,8">
+          <StackPanel>
+            <TextBlock Text="Explore the recorded frames" FontSize="17" FontWeight="SemiBold"/>
+            <TextBlock Text="{Binding Trace.SourceScopeLabel}" Style="{StaticResource MutedText}" TextWrapping="Wrap" />
+            <TextBlock Text="No dataset loaded. Open a recording from section 1 · Datasets."
+                       Style="{StaticResource MutedText}" TextWrapping="Wrap"
+                       Visibility="{Binding IsTraceLoaded, Converter={StaticResource VisibleWhenNoData}}"
+                       AutomationProperties.AutomationId="studio.emptyResults"/>
+            <TextBlock Text="Search an ID, channel or UDS event, then select a row to inspect the original source."
+                       Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,3,0,8" />
+            <DockPanel LastChildFill="True">
+              <Button Content="Run filter" DockPanel.Dock="Right" Command="{Binding DataStudio.RunQueryCommand}"
+                      AutomationProperties.AutomationId="studio.runFilter" Margin="8,0,0,0"
+                      IsEnabled="{Binding IsTraceLoaded}" />
+              <Button Content="Show all" DockPanel.Dock="Right" Command="{Binding DataStudio.ShowAllCommand}"
+                      AutomationProperties.AutomationId="studio.showAll" Margin="8,0,0,0"
+                      IsEnabled="{Binding IsTraceLoaded}" />
+              <TextBox Text="{Binding DataStudio.QueryDraft, UpdateSourceTrigger=PropertyChanged}"
+                       AutomationProperties.AutomationId="studio.query" KeyDown="OnQueryKeyDown"
+                       common:PlaceholderService.Text="e.g. uds, id:7E0, ch1, -uds"/>
+            </DockPanel>
+            <WrapPanel Margin="0,8,0,0">
+              <Button Content="UDS only" Command="{Binding DataStudio.QuickQueryCommand}"
+                      CommandParameter="uds" AutomationProperties.AutomationId="studio.quickUds"
+                      IsEnabled="{Binding IsTraceLoaded}" Margin="0,0,8,5"/>
+              <Button Content="Hide UDS" Command="{Binding DataStudio.QuickQueryCommand}"
+                      CommandParameter="-uds" IsEnabled="{Binding IsTraceLoaded}" Margin="0,0,8,5"/>
+              <Button Content="What changed?" Command="{Binding DataStudio.QuickLensCommand}"
+                      CommandParameter="changes" IsEnabled="{Binding IsTraceLoaded}"
+                      AutomationProperties.AutomationId="studio.quickChanges" Margin="0,0,8,5"
+                      ToolTip="Show payload changes compared with the preceding frame of the same physical source/ID"/>
+              <Button Content="UDS errors" Command="{Binding DataStudio.QuickLensCommand}"
+                      CommandParameter="nrc" IsEnabled="{Binding IsTraceLoaded}"
+                      AutomationProperties.AutomationId="studio.quickNrc" Margin="0,0,8,5"
+                      ToolTip="Show recorded UDS negative responses; no diagnostic request is sent"/>
+              <Button Content="CAN errors" Command="{Binding DataStudio.QuickLensCommand}"
+                      CommandParameter="errors" IsEnabled="{Binding IsTraceLoaded}"
+                      AutomationProperties.AutomationId="studio.quickErrors" Margin="0,0,8,5"
+                      ToolTip="Show error frames that were actually recorded in the trace"/>
+              <TextBlock Text="Rows" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="5,0,5,5"/>
+              <ComboBox MinWidth="130" SelectedIndex="{Binding Trace.ViewModeIndex}" Margin="0,0,8,5">
+                <ComboBoxItem Content="All frames"/>
+                <ComboBoxItem Content="Latest per ID"/>
+                <ComboBoxItem Content="Changes only"/>
+              </ComboBox>
+              <TextBlock Text="Time" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="5,0,5,5"/>
+              <ComboBox ItemsSource="{Binding Trace.TimeDisplayModeChoices}"
+                        SelectedIndex="{Binding Trace.TimeDisplayModeIndex}"
+                        MinWidth="140" Margin="0,0,8,5"/>
+              <TextBlock Text="{Binding Trace.RowCountText}" Style="{StaticResource MutedText}" VerticalAlignment="Center"/>
+            </WrapPanel>
+          </StackPanel>
+        </Border>
+        <DataGrid Grid.Row="1" AutomationProperties.AutomationId="studio.resultsGrid"
+                  ItemsSource="{Binding Trace.Rows}" SelectedItem="{Binding Trace.SelectedRow}"
+                  AutoGenerateColumns="False" IsReadOnly="True" CanUserSortColumns="False"
+                  EnableRowVirtualization="True" VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  ScrollViewer.CanContentScroll="True" SelectionMode="Single"
+                  FontFamily="Consolas" FontSize="12.5"
+                  MouseDoubleClick="OnResultDoubleClick">
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="#" Binding="{Binding FrameIndex}" Width="62"/>
+            <DataGridTextColumn Header="Time [s]" Binding="{Binding TimeText}" Width="112"/>
+            <DataGridTextColumn Header="Bus" Binding="{Binding Channel}" Width="46"/>
+            <DataGridTextColumn Header="CAN ID" Binding="{Binding IdentifierHex}" Width="95"/>
+            <DataGridTextColumn Header="Message" Binding="{Binding MessageName}" Width="140"/>
+            <DataGridTextColumn Header="Source" Binding="{Binding SourceFile}" Width="135">
+              <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock">
+                  <Setter Property="ToolTip" Value="{Binding SourceEvidenceInfo}"/>
+                  <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                </Style>
+              </DataGridTextColumn.ElementStyle>
+            </DataGridTextColumn>
+            <DataGridTextColumn Header="Payload" Binding="{Binding PayloadHex}" Width="160"/>
+            <DataGridTextColumn Header="UDS" Binding="{Binding UdsText}" Width="180"/>
+            <DataGridTextColumn Header="Interpretation" Binding="{Binding InterpretationText}" Width="*"/>
+          </DataGrid.Columns>
+        </DataGrid>
+        <TextBlock Grid.Row="1" Text="No matching frames. Open a recording in Datasets or choose Show all to clear the filter."
+                   Style="{StaticResource MutedText}" TextWrapping="Wrap" TextAlignment="Center"
+                   MaxWidth="430" HorizontalAlignment="Center" VerticalAlignment="Center"
+                   IsHitTestVisible="False"
+                   AutomationProperties.AutomationId="studio.noMatches"
+                   Visibility="{Binding Trace.Rows.Count, Converter={StaticResource SectionVisibility}, ConverterParameter=0}" />
+        <Expander Grid.Row="2" Header="Analysis cells · group and count real recorded frames"
+                  AutomationProperties.AutomationId="studio.aggregatePanel"
+                  Margin="0,7,0,0"
+                  IsExpanded="{Binding DataStudio.AggregatePanelExpanded, Mode=TwoWay}"
+                  ToolTip="Compute a source-aware summary of exactly the rows visible above, then optionally save it inside a named analysis">
+          <ScrollViewer x:Name="AggregateScroll" VerticalScrollBarVisibility="Auto"
+                        HorizontalScrollBarVisibility="Disabled" MaxHeight="265">
+            <StackPanel>
+              <WrapPanel Margin="0,4,0,6">
+                <TextBlock Text="Group by" Style="{StaticResource MutedText}"
+                           VerticalAlignment="Center" Margin="0,0,8,0" />
+                <ComboBox SelectedIndex="{Binding DataStudio.AggregateKindIndex}"
+                          AutomationProperties.AutomationId="studio.aggregateKind"
+                          MinWidth="170" Margin="0,0,8,5">
+                  <ComboBoxItem Content="CAN ID + bus + source" />
+                  <ComboBoxItem Content="Physical recording" />
+                  <ComboBoxItem Content="Traffic bursts · 1 s / recording + bus"
+                                ToolTip="Find the busiest observed one-second intervals, without merging independent logger clocks or treating frame counts as bus load" />
+                </ComboBox>
+                <Button Content="Analyze visible rows" Command="{Binding DataStudio.RunAggregateCommand}"
+                        IsEnabled="{Binding IsTraceLoaded}"
+                        AutomationProperties.AutomationId="studio.aggregateRun"
+                        Margin="0,0,8,5" />
+                <Button Content="Cancel" Command="{Binding DataStudio.CancelAggregateCommand}"
+                        IsEnabled="{Binding DataStudio.IsAggregating}"
+                        AutomationProperties.AutomationId="studio.aggregateCancel"
+                        Margin="0,0,8,5" />
+                <Button Content="Full timeline" Command="{Binding DataStudio.FullTimelineCommand}"
+                        IsEnabled="{Binding IsTraceLoaded}"
+                        AutomationProperties.AutomationId="studio.aggregateTail"
+                        ToolTip="Move the Trace replay cursor to the last recorded frame so saved calculations cover the complete recording"
+                        Margin="0,0,8,5" />
+                <Button Content="Export CSV…" Command="{Binding DataStudio.ExportAggregateCommand}"
+                        IsEnabled="{Binding DataStudio.HasAggregateResult}"
+                        AutomationProperties.AutomationId="studio.aggregateExport"
+                        ToolTip="Export the displayed source-backed summary. CSV includes a warning when only the top 300 groups are displayed."
+                        Margin="0,0,8,5" />
+                <Button Content="Save cell to analysis" Command="{Binding DataStudio.SaveAggregateCellCommand}"
+                        IsEnabled="{Binding IsTraceLoaded}"
+                        AutomationProperties.AutomationId="studio.aggregateSave"
+                        ToolTip="Store the calculation recipe in the active analysis tab; requires the complete timeline and an unchanged source/filter"
+                        Margin="0,0,8,5" />
+                <Button Content="Open first raw frame" Command="{Binding DataStudio.InspectAggregateFrameCommand}"
+                        AutomationProperties.AutomationId="studio.aggregateWitness"
+                        ToolTip="Follow a selected summary row back to its first recorded frame"
+                        Margin="0,0,8,5" />
+              </WrapPanel>
+              <TextBlock Text="{Binding DataStudio.AggregateStatus}" Style="{StaticResource MutedText}"
+                         TextWrapping="Wrap" Margin="0,0,0,6"
+                         AutomationProperties.AutomationId="studio.aggregateStatus" />
+              <DataGrid x:Name="AggregateGrid" ItemsSource="{Binding DataStudio.AggregateRows}"
+                        SelectedItem="{Binding DataStudio.SelectedAggregateRow}"
+                        AutomationProperties.AutomationId="studio.aggregateGrid"
+                        AutoGenerateColumns="False" IsReadOnly="True" CanUserSortColumns="True"
+                        EnableRowVirtualization="True" VirtualizingPanel.IsVirtualizing="True"
+                        Height="150" FontSize="12" RowHeight="27">
+                <DataGrid.Columns>
+                  <DataGridTextColumn Header="Recording" Binding="{Binding SourceName}" Width="200">
+                    <DataGridTextColumn.ElementStyle>
+                      <Style TargetType="TextBlock">
+                        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                        <Setter Property="ToolTip" Value="{Binding SourceName}" />
+                      </Style>
+                    </DataGridTextColumn.ElementStyle>
+                  </DataGridTextColumn>
+                  <DataGridTextColumn Header="Bus" Binding="{Binding ChannelText}" Width="90"/>
+                  <DataGridTextColumn Header="CAN ID" Binding="{Binding IdentifierText}" Width="90"/>
+                  <DataGridTextColumn Header="Frames" Binding="{Binding FrameCountText}" Width="95"/>
+                  <DataGridTextColumn Header="Errors" Binding="{Binding ErrorCountText}" Width="72"/>
+                  <DataGridTextColumn Header="CAN FD" Binding="{Binding CanFdCountText}" Width="72"/>
+                  <DataGridTextColumn Header="1 s bucket" Binding="{Binding TimeBucketText}" Width="115"/>
+                  <DataGridTextColumn Header="Observed time range" Binding="{Binding TimeRangeText}" Width="220"/>
+                  <DataGridTextColumn Header="Span" Binding="{Binding SpanText}" Width="85"/>
+                </DataGrid.Columns>
+              </DataGrid>
+              <TextBlock Text="Results always retain the physical recording and raw-frame witnesses. Traffic bursts group each recording and bus in 1-second source-clock windows, sorted by most frames; these counts are not bus load or synchronized logger clocks. At most 300 groups are shown."
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,5,0,0" />
+            </StackPanel>
+          </ScrollViewer>
+        </Expander>
+        <Border Grid.Row="3" Style="{StaticResource Card}" Padding="10" Margin="0,8,0,0">
+          <DockPanel LastChildFill="True">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top" Margin="10,0,0,0">
+              <Button Content="Open frame in Trace" Command="{Binding DataStudio.OpenSelectedFrameCommand}"
+                      AutomationProperties.AutomationId="studio.openRawFrame" Margin="0,0,8,0"/>
+              <Button Content="Save as analysis" Command="{Binding DataStudio.CreateTabCommand}"
+                      IsEnabled="{Binding IsTraceLoaded}"
+                      AutomationProperties.AutomationId="studio.saveAnalysis"/>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock Text="Original evidence" FontWeight="SemiBold"/>
+              <TextBlock Text="{Binding Trace.SelectedRow.SourceEvidenceInfo}"
+                         Style="{StaticResource MutedText}" MaxHeight="54" TextTrimming="CharacterEllipsis"
+                         TextWrapping="Wrap" AutomationProperties.AutomationId="studio.sourceEvidence"/>
+            </StackPanel>
+          </DockPanel>
+        </Border>
+      </Grid>
+
+      <!-- COMPARE: advanced specialist functions remain separate; no fake
+           measurements or unverified Vector-equivalence claims. -->
+      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                    Visibility="{Binding DataStudio.SectionIndex, Converter={StaticResource SectionVisibility}, ConverterParameter=3}">
+        <StackPanel MaxWidth="1030" HorizontalAlignment="Stretch" Margin="2,0,10,10">
+          <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,10">
+            <StackPanel>
+              <TextBlock Text="Compare recordings" FontSize="18" FontWeight="SemiBold"/>
+              <TextBlock Text="Understand which CAN channels and identifiers appear in each source. A missing ID alone does not prove a fault."
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,6,0,12"/>
+              <TextBlock Text="{Binding TraceWorkspaceSummary}" Style="{StaticResource MutedText}" Margin="0,0,0,8"/>
+              <Button Content="Compare source coverage…" HorizontalAlignment="Left"
+                      Style="{StaticResource AccentButton}" Click="OnCompareSourcesClick"
+                      AutomationProperties.AutomationId="studio.compareSources"
+                      IsEnabled="{Binding CanCompareTraceSources}"
+                      ToolTip="Compare observed bus and CAN ID coverage in separate original source files"/>
+              <TextBlock Text="Comparison requires at least two recordings loaded together. Use Datasets to add a second file."
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+            </StackPanel>
+          </Border>
+          <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,10">
+            <StackPanel>
+              <TextBlock Text="UDS diagnostics · per recording" FontSize="17" FontWeight="SemiBold"/>
+              <TextBlock Text="Count actual UDS requests and responses separately for each logger. The application verifies every original CAN frame in each transaction before including it."
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,6,0,10"/>
+              <WrapPanel>
+                <Button Content="Build UDS summary" Style="{StaticResource AccentButton}"
+                        Command="{Binding DataStudio.BuildUdsSourceSummaryCommand}"
+                        IsEnabled="{Binding IsTraceLoaded}"
+                        AutomationProperties.AutomationId="studio.udsSourceBuild"
+                        Margin="0,0,8,8" />
+                <Button Content="Cancel" Command="{Binding DataStudio.CancelUdsSourceSummaryCommand}"
+                        IsEnabled="{Binding DataStudio.IsSummarizingUds}"
+                        AutomationProperties.AutomationId="studio.udsSourceCancel"
+                        Margin="0,0,8,8" />
+                <Button Content="Open source frame" Command="{Binding DataStudio.InspectUdsSourceWitnessCommand}"
+                        AutomationProperties.AutomationId="studio.udsSourceWitness"
+                        ToolTip="Open the exact first recorded frame that supports the selected UDS summary"
+                        Margin="0,0,8,8"/>
+              </WrapPanel>
+              <TextBlock Text="{Binding DataStudio.UdsSourceStatus}"
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap"
+                         AutomationProperties.AutomationId="studio.udsSourceStatus"
+                         Margin="0,0,0,8"/>
+              <DataGrid ItemsSource="{Binding DataStudio.UdsSourceRows}"
+                        SelectedItem="{Binding DataStudio.SelectedUdsSourceRow}"
+                        AutomationProperties.AutomationId="studio.udsSourceGrid"
+                        AutoGenerateColumns="False" IsReadOnly="True"
+                        CanUserSortColumns="True" EnableRowVirtualization="True"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        ScrollViewer.CanContentScroll="True"
+                        Height="195" FontSize="12">
+                <DataGrid.Columns>
+                  <DataGridTextColumn Header="Recording" Binding="{Binding SourceName}" Width="160">
+                    <DataGridTextColumn.ElementStyle>
+                      <Style TargetType="TextBlock">
+                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                        <Setter Property="ToolTip" Value="{Binding SourcePath}"/>
+                      </Style>
+                    </DataGridTextColumn.ElementStyle>
+                  </DataGridTextColumn>
+                  <DataGridTextColumn Header="Service" Binding="{Binding ServiceText}" Width="74"/>
+                  <DataGridTextColumn Header="Meaning" Binding="{Binding ServiceName}" Width="160"/>
+                  <DataGridTextColumn Header="Total" Binding="{Binding TotalText}" Width="68"/>
+                  <DataGridTextColumn Header="Positive" Binding="{Binding PositiveText}" Width="76"/>
+                  <DataGridTextColumn Header="NRC" Binding="{Binding NegativeText}" Width="65"/>
+                  <DataGridTextColumn Header="No reply" Binding="{Binding NoResponseText}" Width="76"/>
+                  <DataGridTextColumn Header="Malformed" Binding="{Binding MalformedText}" Width="85"/>
+                  <DataGridTextColumn Header="Orphan" Binding="{Binding OrphanText}" Width="72"/>
+                  <DataGridTextColumn Header="Time span [s]" Binding="{Binding TimeRangeText}" Width="210"/>
+                </DataGrid.Columns>
+              </DataGrid>
+              <TextBlock Text="Observed source/service counts only. Different capture windows, logger clocks or diagnostic requests are not assumed equivalent. No fabricated ECU identity or inferred cross-file request/response links."
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+            </StackPanel>
+          </Border>
+
+          <!-- Source-verified diagnostic investigations: no extra frame copy. -->
+          <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,10">
+            <StackPanel>
+              <TextBlock Text="DTC investigation · DTC tables, CDD/ODX and fault lifecycle"
+                         FontSize="17" FontWeight="SemiBold"/>
+              <TextBlock Text="Examine recorded DTC status, ECU, original logger, CAN bus, clear operations and snapshot/extended records. Inspect the original frames before drawing conclusions."
+                         TextWrapping="Wrap" Style="{StaticResource MutedText}" Margin="0,6,0,9"/>
+              <WrapPanel Margin="0,0,0,7">
+                <ComboBox Width="200" Margin="0,0,8,6"
+                          ItemsSource="{Binding DataStudio.DiagnosticSourceChoices}"
+                          SelectedIndex="{Binding DataStudio.DiagnosticSourceIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                          AutomationProperties.AutomationId="studio.dtcLogger"
+                          AutomationProperties.Name="Physical recording for DTC and DID investigation"
+                          ToolTip="All recordings or one original logger; both diagnostic tables use this same source scope."/>
+                <TextBox Width="215" Margin="0,0,8,6"
+                         Text="{Binding DataStudio.DtcSearchText, UpdateSourceTrigger=PropertyChanged}"
+                         common:PlaceholderService.Text="Search code, ECU or name…"
+                         AutomationProperties.AutomationId="studio.dtcSearch"/>
+                <ComboBox Width="175" Margin="0,0,8,6"
+                          SelectedIndex="{Binding DataStudio.DtcStateFilterIndex, Mode=TwoWay}"
+                          AutomationProperties.AutomationId="studio.dtcStateFilter">
+                  <ComboBoxItem Content="All DTC histories"/>
+                  <ComboBoxItem Content="Not currently cleared"/>
+                  <ComboBoxItem Content="Currently cleared"/>
+                  <ComboBoxItem Content="With record data"/>
+                </ComboBox>
+                <Button Content="Open in UDS" Command="{Binding DataStudio.OpenDtcInUdsCommand}"
+                        AutomationProperties.AutomationId="studio.dtcOpenUds" Margin="0,0,8,6"/>
+                <ComboBox x:Name="FaultContextWindowChoice" Width="115" SelectedIndex="1" Margin="0,0,7,6"
+                          AutomationProperties.AutomationId="studio.faultWindow"
+                          ToolTip="Time window on either side of the recorded DTC event, not necessarily physical fault onset">
+                  <ComboBoxItem Content="±1 s"/>
+                  <ComboBoxItem Content="±5 s"/>
+                  <ComboBoxItem Content="±30 s"/>
+                  <ComboBoxItem Content="±120 s"/>
+                </ComboBox>
+                <Button Content="Investigate fault conditions…" Click="OnInvestigateFaultContextClick"
+                        AutomationProperties.AutomationId="studio.investigateFaultContext"
+                        Margin="0,0,8,6"
+                        ToolTip="Use the selected recorded DTC event to inspect real CAN signal changes before/after that time, snapshot definitions and exact source frame evidence" />
+                <Button Content="Open original frame" Command="{Binding DataStudio.OpenDtcFrameCommand}"
+                        AutomationProperties.AutomationId="studio.dtcOpenFrame" Margin="0,0,8,6"
+                        ToolTip="Open the last recorded original CAN frame of the selected DTC event"/>
+                <Button Content="Save DTC + DID review"
+                        Command="{Binding DataStudio.SaveDiagnosticInvestigationCommand}"
+                        AutomationProperties.AutomationId="studio.saveDiagnosticInvestigation"
+                        Margin="0,0,8,6"
+                        ToolTip="Save this physical logger, DTC search/status and DID-DBC correlation filters as a repeatable analysis-tab recipe; original frames are not copied."/>
+              </WrapPanel>
+              <TextBlock Text="{Binding DataStudio.DtcSummary}" Style="{StaticResource MutedText}"
+                         AutomationProperties.AutomationId="studio.dtcSummary"
+                         TextWrapping="Wrap" Margin="0,0,0,7"/>
+              <DataGrid ItemsSource="{Binding DataStudio.DtcRows}"
+                        SelectedItem="{Binding DataStudio.SelectedDtc, Mode=TwoWay}"
+                        AutomationProperties.AutomationId="studio.dtcGrid"
+                        AutoGenerateColumns="False" IsReadOnly="True"
+                        CanUserSortColumns="True" EnableRowVirtualization="True"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        ScrollViewer.CanContentScroll="True" FontSize="12" Height="205">
+                <DataGrid.Columns>
+                  <DataGridTextColumn Header="Recording" Binding="{Binding Recording}" Width="160">
+                    <DataGridTextColumn.ElementStyle>
+                      <Style TargetType="TextBlock">
+                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                        <Setter Property="ToolTip" Value="{Binding OriginalSourcePath}"/>
+                      </Style>
+                    </DataGridTextColumn.ElementStyle>
+                  </DataGridTextColumn>
+                  <DataGridTextColumn Header="DTC" Binding="{Binding Code}" Width="85"/>
+                  <DataGridTextColumn Header="ECU" Binding="{Binding Ecu}" Width="85"/>
+                  <DataGridTextColumn Header="Bus" Binding="{Binding Bus}" Width="76"/>
+                  <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="160"/>
+                  <DataGridTextColumn Header="Status" Binding="{Binding CurrentStatus}" Width="145"/>
+                  <DataGridTextColumn Header="Reads" Binding="{Binding Reads}" Width="65"/>
+                  <DataGridTextColumn Header="Record data" Binding="{Binding RecordText}" Width="175"/>
+                  <DataGridTextColumn Header="Definition sources" Binding="{Binding Catalog}" Width="165">
+                    <DataGridTextColumn.ElementStyle>
+                      <Style TargetType="TextBlock">
+                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                        <Setter Property="ToolTip" Value="{Binding CatalogPath}"/>
+                      </Style>
+                    </DataGridTextColumn.ElementStyle>
+                  </DataGridTextColumn>
+                </DataGrid.Columns>
+              </DataGrid>
+              <TextBlock Text="{Binding DataStudio.SelectedDtc.Description}" TextWrapping="Wrap"
+                         Style="{StaticResource MutedText}" Margin="0,8,0,4"/>
+              <TextBlock Text="{Binding DataStudio.SelectedDtc.DtcTableDetails}" TextWrapping="Wrap"
+                         Style="{StaticResource MutedText}" Margin="0,0,0,6"
+                         AutomationProperties.AutomationId="studio.dtcTableReference"
+                         ToolTip="OEM DTC table declarations only; these fields are not measured CAN or UDS values."/>
+              <TextBlock Text="{Binding DataStudio.SelectedDtc.DtcDefinitionConflictText}"
+                         TextWrapping="Wrap" Style="{StaticResource MutedText}"
+                         Margin="0,0,0,6"
+                         AutomationProperties.AutomationId="studio.dtcDefinitionConflicts"
+                         ToolTip="Alternative declarations from competing CDD/ODX/DTC tables. They have not been verified against the original ECU."/>
+              <TextBlock Text="Selected DTC · recorded status and clear history"
+                         Style="{StaticResource MutedText}" FontSize="11" Margin="0,3,0,4"/>
+              <DataGrid ItemsSource="{Binding DataStudio.SelectedDtcTimeline}"
+                        SelectedItem="{Binding DataStudio.SelectedDtcTransition, Mode=TwoWay}"
+                        AutomationProperties.AutomationId="studio.dtcTimeline"
+                        AutoGenerateColumns="False" IsReadOnly="True"
+                        EnableRowVirtualization="True" Height="125" FontSize="11.5">
+                <DataGrid.Columns>
+                  <DataGridTextColumn Header="Source time [ns]" Binding="{Binding TimestampNanoseconds}" Width="145"/>
+                  <DataGridTextColumn Header="Operation" Binding="{Binding Operation}" Width="200"/>
+                  <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="155"/>
+                  <DataGridTextColumn Header="Outcome" Binding="{Binding Outcome}" Width="100"/>
+                  <DataGridTextColumn Header="DTC data" Binding="{Binding ExtraData}" Width="*"/>
+                </DataGrid.Columns>
+              </DataGrid>
+              <TextBlock Text="{Binding DataStudio.SelectedDtcStatusExplanation}"
+                         AutomationProperties.AutomationId="studio.dtcStatusEvidence"
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap"
+                         Margin="0,6,0,5"
+                         ToolTip="ISO 14229 status-bit differences. An acknowledged 0x14 clear is not a later 0x19 status read-back."/>
+              <TextBlock Text="{Binding DataStudio.SelectedDtc.SourceEvidence}"
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+
+              <TextBlock Text="DTC snapshot and extended-data records · decoded catalog fields and original bytes"
+                         Style="{StaticResource MutedText}" FontSize="11" Margin="0,10,0,5"/>
+              <DataGrid ItemsSource="{Binding DataStudio.SelectedDtcRecords}"
+                        SelectedItem="{Binding DataStudio.SelectedDtcRecord, Mode=TwoWay}"
+                        AutomationProperties.AutomationId="studio.dtcRecords"
+                        AutoGenerateColumns="False" IsReadOnly="True"
+                        Height="112" EnableRowVirtualization="True" FontSize="11.5">
+                <DataGrid.Columns>
+                  <DataGridTextColumn Header="Record kind" Binding="{Binding KindText}" Width="125"/>
+                  <DataGridTextColumn Header="Record #" Binding="{Binding RecordNumber}" Width="75"/>
+                  <DataGridCheckBoxColumn Header="Fully decoded" Binding="{Binding IsFullyDecoded, Mode=OneWay}" Width="105"/>
+                  <DataGridTextColumn Header="Original record bytes" Binding="{Binding RawHex}" Width="220"/>
+                  <DataGridTextColumn Header="Source CAN frames" Binding="{Binding SourceEvidenceText}" Width="210"/>
+                  <DataGridTextColumn Header="Unresolved / limitations" Binding="{Binding Note}" Width="*"/>
+                </DataGrid.Columns>
+              </DataGrid>
+              <TextBlock Text="{Binding DataStudio.DtcRecordEventExplanation}"
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,5,0,5"/>
+              <DataGrid ItemsSource="{Binding DataStudio.SelectedDtcRecordValues}"
+                        SelectedItem="{Binding DataStudio.SelectedDtcRecordField, Mode=TwoWay}"
+                        AutomationProperties.AutomationId="studio.dtcRecordFields"
+                        AutoGenerateColumns="False" IsReadOnly="True"
+                        Height="112" EnableRowVirtualization="True" FontSize="11.5">
+                <DataGrid.Columns>
+                  <DataGridTextColumn Header="CDD/ODX field or DID" Binding="{Binding Name}" Width="205"/>
+                  <DataGridTextColumn Header="Raw" Binding="{Binding Raw}" Width="155"/>
+                  <DataGridTextColumn Header="Physical" Binding="{Binding Physical}" Width="125"/>
+                  <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="90"/>
+                  <DataGridTextColumn Header="Meaning / enum" Binding="{Binding Meaning}" Width="*"/>
+                  <DataGridTextColumn Header="Verified CAN byte evidence" Binding="{Binding SourceEvidenceText}" Width="230"/>
+                </DataGrid.Columns>
+              </DataGrid>
+              <WrapPanel Margin="0,6,0,4">
+                <Button Content="Open record in Trace"
+                        Command="{Binding DataStudio.OpenDtcRecordSourceCommand}"
+                        AutomationProperties.AutomationId="studio.dtcRecordTrace"
+                        Margin="0,0,8,0"
+                        ToolTip="Open exact original CAN frame backing this DTC record; does nothing if the source mapping is unverified." />
+                <Button Content="Open field in Trace"
+                        Command="{Binding DataStudio.OpenDtcFieldSourceCommand}"
+                        AutomationProperties.AutomationId="studio.dtcFieldTrace"
+                        ToolTip="Open original CAN frame containing selected CDD/ODX field. Evidence column lists every CAN frame for a multiframe field." />
+              </WrapPanel>
+              <TextBlock Text="{Binding DataStudio.DtcRecordFieldEvidence}"
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,2,0,4" />
+              <TextBlock Text="{Binding DataStudio.DtcRecordExplanation}"
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+
+              <TextBlock Text="DTC snapshot DID → CAN/DBC candidates"
+                         FontSize="14" FontWeight="SemiBold" Margin="0,14,0,4"/>
+              <TextBlock Text="{Binding DataStudio.DtcCanSummary}"
+                         AutomationProperties.AutomationId="studio.dtcCanSummary"
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+              <DataGrid ItemsSource="{Binding DataStudio.DtcCanCandidates}"
+                        SelectedItem="{Binding DataStudio.SelectedDtcCanCandidate, Mode=TwoWay}"
+                        AutomationProperties.AutomationId="studio.dtcCanGrid"
+                        AutoGenerateColumns="False" IsReadOnly="True"
+                        CanUserSortColumns="True" EnableRowVirtualization="True"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        ScrollViewer.CanContentScroll="True" Height="135" FontSize="11.5">
+                <DataGrid.Columns>
+                  <DataGridTextColumn Header="Snapshot DID" Binding="{Binding Did}" Width="90"/>
+                  <DataGridTextColumn Header="Recorded field" Binding="{Binding RecordedField}" Width="180"/>
+                  <DataGridTextColumn Header="Snapshot value" Binding="{Binding SnapshotValue}" Width="115"/>
+                  <DataGridTextColumn Header="Candidate CDD/ODX" Binding="{Binding CddOdx}" Width="145"/>
+                  <DataGridTextColumn Header="Field scope" Binding="{Binding MatchScope}" Width="110"/>
+                  <DataGridTextColumn Header="DBC" Binding="{Binding Dbc}" Width="110"/>
+                  <DataGridTextColumn Header="CAN signal" Binding="{Binding CanSignal}" Width="165"/>
+                  <DataGridTextColumn Header="Verdict" Binding="{Binding Verdict}" Width="105"/>
+                  <DataGridTextColumn Header="Pairs" Binding="{Binding Pairs}" Width="55"/>
+                  <DataGridTextColumn Header="Original CAN source" Binding="{Binding CanSource}" Width="210"/>
+                  <DataGridTextColumn Header="Snapshot CAN frames" Binding="{Binding SnapshotFrameEvidence}" Width="220"/>
+                </DataGrid.Columns>
+              </DataGrid>
+              <WrapPanel Margin="0,7,0,3">
+                <Button Content="Investigate selected candidate in UDS ↔ CAN"
+                        Command="{Binding DataStudio.OpenSelectedDtcCanCandidateCommand}"
+                        AutomationProperties.AutomationId="studio.dtcCanInspect"
+                        Margin="0,0,8,0"
+                        ToolTip="Open original paired DID/CAN frame evidence in the UDS workspace. A candidate is not a confirmed identity."/>
+                <Button Content="Plot exact CAN source"
+                        Command="{Binding DataStudio.PlotSelectedDtcCanCandidateCommand}"
+                        AutomationProperties.AutomationId="studio.dtcCanPlot"
+                        ToolTip="Open the actual CAN/DBC signal timeline used by the hypothesis. Requires exact DBC, logger, CAN bus and wire ID; no name-only matching."/>
+              </WrapPanel>
+              <TextBlock Text="{Binding DataStudio.SelectedDtcCanExplanation}"
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,3,0,0"/>
+            </StackPanel>
+          </Border>
+
+          <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,10">
+            <StackPanel>
+              <TextBlock Text="DID ↔ CAN/DBC investigation · definition to original trace"
+                         FontSize="17" FontWeight="SemiBold"/>
+              <TextBlock Text="Compare CDD/ODX DID metadata with DBC signals and source-backed numeric pairs. Even strong statistical agreement is not proof of ECU or signal identity."
+                         TextWrapping="Wrap" Style="{StaticResource MutedText}" Margin="0,6,0,9"/>
+              <WrapPanel Margin="0,0,0,7">
+                <TextBox Width="265" Margin="0,0,8,6"
+                         Text="{Binding DataStudio.MappingSearchText, UpdateSourceTrigger=PropertyChanged}"
+                         common:PlaceholderService.Text="DID, ECU, DBC, signal…"
+                         AutomationProperties.AutomationId="studio.mappingSearch"/>
+                <CheckBox Content="With original frame pairs"
+                          IsChecked="{Binding DataStudio.PairedMappingsOnly, Mode=TwoWay}"
+                          AutomationProperties.AutomationId="studio.mappingPairsOnly"
+                          Margin="0,4,12,6"/>
+                <Button Content="DID response frame" Margin="0,0,8,6"
+                        Command="{Binding DataStudio.OpenMappingDidFrameCommand}"
+                        AutomationProperties.AutomationId="studio.mappingDidFrame"/>
+                <Button Content="CAN signal frame" Margin="0,0,8,6"
+                        Command="{Binding DataStudio.OpenMappingCanFrameCommand}"
+                        AutomationProperties.AutomationId="studio.mappingCanFrame"/>
+                <Button Content="Inspect in UDS" Margin="0,0,8,6"
+                        Command="{Binding DataStudio.OpenMappingInUdsCommand}"
+                        AutomationProperties.AutomationId="studio.mappingOpenUds"/>
+              </WrapPanel>
+              <TextBlock Text="{Binding DataStudio.MappingSummary}" Style="{StaticResource MutedText}"
+                         AutomationProperties.AutomationId="studio.mappingSummary"
+                         Margin="0,0,0,8" TextWrapping="Wrap"/>
+              <DataGrid ItemsSource="{Binding DataStudio.MappingRows}"
+                        SelectedItem="{Binding DataStudio.SelectedMapping, Mode=TwoWay}"
+                        AutomationProperties.AutomationId="studio.mappingGrid"
+                        AutoGenerateColumns="False" IsReadOnly="True"
+                        CanUserSortColumns="True" EnableRowVirtualization="True"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        ScrollViewer.CanContentScroll="True" Height="195" FontSize="12">
+                <DataGrid.Columns>
+                  <DataGridTextColumn Header="Recording" Binding="{Binding Recording}" Width="140"/>
+                  <DataGridTextColumn Header="DID" Binding="{Binding Did}" Width="75"/>
+                  <DataGridTextColumn Header="DID name" Binding="{Binding DidName}" Width="160"/>
+                  <DataGridTextColumn Header="ECU" Binding="{Binding Ecu}" Width="80"/>
+                  <DataGridTextColumn Header="CDD/ODX" Binding="{Binding CddOdx}" Width="130">
+                    <DataGridTextColumn.ElementStyle>
+                      <Style TargetType="TextBlock">
+                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                        <Setter Property="ToolTip" Value="{Binding CddOdxPath}"/>
+                      </Style>
+                    </DataGridTextColumn.ElementStyle>
+                  </DataGridTextColumn>
+                  <DataGridTextColumn Header="DBC" Binding="{Binding Dbc}" Width="105"/>
+                  <DataGridTextColumn Header="CAN signal" Binding="{Binding Signal}" Width="165"/>
+                  <DataGridTextColumn Header="Verdict" Binding="{Binding Verdict}" Width="120"/>
+                  <DataGridTextColumn Header="Pairs" Binding="{Binding PairCount}" Width="60"/>
+                  <DataGridTextColumn Header="Fit" Binding="{Binding Fit}" Width="170"/>
+                </DataGrid.Columns>
+              </DataGrid>
+              <TextBlock Text="{Binding DataStudio.SelectedMapping.CanSource}" TextWrapping="Wrap"
+                         FontWeight="SemiBold" Margin="0,8,0,3"/>
+              <TextBlock Text="{Binding DataStudio.SelectedMapping.Explanation}" TextWrapping="Wrap"
+                         Style="{StaticResource MutedText}"/>
+            </StackPanel>
+          </Border>
+          <Border Style="{StaticResource Card}" Padding="16">
+            <StackPanel>
+              <TextBlock Text="Explore deeper" FontSize="17" FontWeight="SemiBold"/>
+              <TextBlock Text="Choose the specialist analysis you need. All of them link back to recorded CAN evidence."
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,6,0,12"/>
+              <WrapPanel>
+                <Button Content="Signal graphs" Command="{Binding DataStudio.OpenSignalsCommand}"
+                        AutomationProperties.AutomationId="studio.goSignals" Margin="0,0,8,8" Padding="12,8"/>
+                <Button Content="UDS and diagnostics" Command="{Binding DataStudio.OpenDiagnosticsCommand}"
+                        AutomationProperties.AutomationId="studio.goUds" Margin="0,0,8,8" Padding="12,8"/>
+                <Button Content="Timing and statistics" Command="{Binding DataStudio.OpenStatisticsCommand}"
+                        AutomationProperties.AutomationId="studio.goStats" Margin="0,0,8,8" Padding="12,8"/>
+                <Button Content="Advanced Trace" Command="{Binding DataStudio.OpenTraceCommand}"
+                        AutomationProperties.AutomationId="studio.goTrace" Margin="0,0,8,8" Padding="12,8"/>
+              </WrapPanel>
+              <TextBlock Text="All processing is offline. DTC and DID-to-DBC investigation tables above preserve source identity and direct navigation to recorded evidence. Independent logger clocks are not aligned. Existing saved analysis tabs currently scope Trace queries, not diagnostic filters."
+                         Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
+    </Grid>
+  </Grid>
+</UserControl>

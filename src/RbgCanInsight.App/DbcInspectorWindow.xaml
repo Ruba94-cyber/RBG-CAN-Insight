@@ -1,0 +1,439 @@
+<Window x:Class="RbgCanInsight.App.DbcInspectorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="DBC signal inspector" Width="1100" Height="760" MinWidth="700" MinHeight="450"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BackgroundBrush}"
+        Icon="Assets/RbgCanInsight.png">
+  <Grid Margin="12">
+            <Border Style="{StaticResource Card}" Padding="10,8">
+              <Grid>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <DockPanel Grid.Row="0" Margin="0,0,0,6">
+                  <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Content="Add to chart" Style="{StaticResource AccentButton}" Margin="0,0,6,0"
+                            Command="{Binding PlotSelectedDbcSignalCommand}" IsEnabled="{Binding DbcInspector.HasSelection}"
+                            ToolTip="Plot this exact DBC signal, scoped by database and selected physical CAN channel; no ambiguous automatic channel guessing"
+                            AutomationProperties.Name="Plot selected DBC signal" />
+                    <Button Content="Quick Plot ↗" Margin="0,0,6,0" Click="OnQuickPlotClick"
+                            IsEnabled="{Binding DbcInspector.HasSelection}"
+                            AutomationProperties.AutomationId="dbc.quickPlot"
+                            ToolTip="Open an independent signal graph for the selected DBC signal and CAN channel, without changing the main chart"
+                            AutomationProperties.Name="Quick plot selected DBC signal" />
+                    <Button Content="Related DIDs" Command="{Binding ShowRelatedDidsCommand}" Margin="0,0,6,0"
+                            IsEnabled="{Binding DbcInspector.HasSelection}"
+                            ToolTip="Show recorded UDS-to-CAN correlations that involve this exact DBC signal"
+                            AutomationProperties.Name="Show diagnostic DIDs correlated with the selected DBC signal" AutomationProperties.AutomationId="dbc.relatedDids" />
+                    <Button Content="Source frame" Command="{Binding OpenSelectedDbcSignalFrameCommand}"
+                            ToolTip="Jump to the actual raw frame used for the selected observed DBC value"
+                            AutomationProperties.Name="Show source CAN frame for selected DBC signal" />
+                  </StackPanel>
+                  <TextBlock Text="{Binding DbcInspector.Header}" Style="{StaticResource SectionTitle}"
+                             FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"
+                             TextTrimming="CharacterEllipsis" />
+                </DockPanel>
+                <TextBlock Grid.Row="1" Text="{Binding DbcInspector.SourceText}" Style="{StaticResource MutedText}"
+                           FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,0,0,5"
+                           ToolTip="{Binding DbcInspector.SourceText}"/>
+                <TabControl Grid.Row="2">
+                  <TabItem Header="Bit layout" AutomationProperties.AutomationId="dbc.bitLayoutTab">
+                    <Grid Margin="4">
+                      <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                      </Grid.RowDefinitions>
+                      <TextBlock Text="{Binding DbcInspector.BoundsText}" FontFamily="Consolas"
+                                 TextWrapping="Wrap" FontSize="11.5" Margin="0,0,0,3"/>
+                      <TextBlock Grid.Row="1" Text="Each cell = bit number / occupancy / recorded raw 0 or 1 · S = start · ■ selected · □ other signal · orange = overlap. A dot means no source bit. Hover for exact bit significance."
+                                 Style="{StaticResource MutedText}" FontSize="10.5"
+                                 TextWrapping="Wrap" Margin="0,0,0,5"/>
+                      <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                                    AutomationProperties.Name="DBC message payload bit map">
+                        <ItemsControl ItemsSource="{Binding DbcInspector.BitRows}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <DockPanel LastChildFill="False" Margin="0,0,0,2">
+                                <TextBlock DockPanel.Dock="Left" Text="{Binding ByteLabel}" Width="66"
+                                           FontFamily="Consolas" FontSize="11" VerticalAlignment="Center"/>
+                                <ItemsControl ItemsSource="{Binding Cells}">
+                                  <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><UniformGrid Rows="1" Columns="8"/></ItemsPanelTemplate>
+                                  </ItemsControl.ItemsPanel>
+                                  <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                      <Border Width="49" Height="28" CornerRadius="3" BorderThickness="1"
+                                              Margin="1" ToolTip="{Binding Tooltip}">
+                                        <Border.Style>
+                                          <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{DynamicResource SurfaceInputBrush}"/>
+                                            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                                            <Style.Triggers>
+                                              <DataTrigger Binding="{Binding IsOccupied}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}"/>
+                                              </DataTrigger>
+                                              <DataTrigger Binding="{Binding InSelectedSignal}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                              </DataTrigger>
+                                              <DataTrigger Binding="{Binding IsOverlapping}" Value="True">
+                                                <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}"/>
+                                                <Setter Property="BorderThickness" Value="2"/>
+                                              </DataTrigger>
+                                            </Style.Triggers>
+                                          </Style>
+                                        </Border.Style>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                          <TextBlock Text="{Binding BitNumber}" FontFamily="Consolas" FontSize="10"
+                                                     Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,4,0"/>
+                                          <TextBlock Text="{Binding Glyph}" FontFamily="Consolas" FontSize="11"
+                                                     FontWeight="SemiBold"/>
+                                          <TextBlock Text="{Binding RecordedBitText}" FontFamily="Consolas" FontSize="10"
+                                                     FontWeight="SemiBold" Margin="4,0,0,0"
+                                                     Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        </StackPanel>
+                                      </Border>
+                                    </DataTemplate>
+                                  </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                              </DockPanel>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </ScrollViewer>
+                    </Grid>
+                  </TabItem>
+                  <TabItem Header="Encoding &amp; units">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="8">
+                      <StackPanel>
+                        <TextBlock Text="{Binding DbcInspector.ByteOrderText}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBlock Text="{Binding DbcInspector.EncodingText}" Margin="0,0,0,5"/>
+                        <TextBlock Text="{Binding DbcInspector.BoundsText}" FontFamily="Consolas" Margin="0,0,0,5" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding DbcInspector.CodedRangeText}" FontFamily="Consolas"
+                                   TextWrapping="Wrap" Margin="0,0,0,5"/>
+                        <TextBlock Text="{Binding DbcInspector.FormulaText}" FontFamily="Consolas" Margin="0,0,0,5"/>
+                        <TextBlock Text="{Binding DbcInspector.RangeText, StringFormat='Physical limits declared in DBC: {0}'}" Margin="0,0,0,5"/>
+                        <TextBlock Text="{Binding DbcInspector.MultiplexText, StringFormat='Multiplexing: {0}'}" Margin="0,0,0,5"/>
+                        <TextBlock Text="{Binding DbcInspector.CommentText}" Style="{StaticResource MutedText}"
+                                   TextWrapping="Wrap" Margin="0,0,0,5"/>
+                        <TextBlock Text="{Binding DbcInspector.WarningsText}" Foreground="{DynamicResource WarningBrush}"
+                                   TextWrapping="Wrap" FontSize="11"/>
+                      </StackPanel>
+                    </ScrollViewer>
+                  </TabItem>
+                  <TabItem Header="Value meanings (VAL_)">
+                    <DockPanel Margin="6">
+                      <TextBlock DockPanel.Dock="Top" Text="{Binding DbcInspector.EnumerationSummary}"
+                                 Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                      <DataGrid ItemsSource="{Binding DbcInspector.NamedValues}" IsReadOnly="True"
+                                AutoGenerateColumns="False" CanUserSortColumns="True"
+                                EnableRowVirtualization="True" VirtualizingPanel.VirtualizationMode="Recycling">
+                        <DataGrid.Columns>
+                          <DataGridTextColumn Header="Raw" Binding="{Binding Raw}" Width="85" FontFamily="Consolas"/>
+                          <DataGridTextColumn Header="HEX" Binding="{Binding RawHex}" Width="90" FontFamily="Consolas"/>
+                          <DataGridTextColumn Header="Physical" Binding="{Binding PhysicalText}" Width="130"/>
+                          <DataGridTextColumn Header="Meaning from DBC" Binding="{Binding Meaning}" Width="*"/>
+                        </DataGrid.Columns>
+                      </DataGrid>
+                    </DockPanel>
+                  </TabItem>
+                  <TabItem Header="Observed raw values" AutomationProperties.AutomationId="dbc.valueExplorerTab">
+                    <DockPanel Margin="6">
+                      <StackPanel DockPanel.Dock="Top" Margin="0,0,0,7">
+                        <TextBlock Text="{Binding DbcValues.Interpretation}" Style="{StaticResource MutedText}"
+                                   TextWrapping="Wrap" FontSize="10.5" Margin="0,0,0,6"/>
+                        <DockPanel>
+                          <Button Content="Analyze recorded codes" DockPanel.Dock="Right"
+                                  Command="{Binding DbcValues.AnalyzeCommand}" Style="{StaticResource AccentButton}"
+                                  Margin="8,0,0,0" AutomationProperties.AutomationId="dbc.valueExplorerAnalyze"/>
+                          <ComboBox ItemsSource="{Binding DbcValues.ChannelChoices}"
+                                    SelectedItem="{Binding DbcValues.SelectedChoice}" DisplayMemberPath="Display"
+                                    MinWidth="220" AutomationProperties.Name="Physical CAN channel for exact raw-code analysis"
+                                    AutomationProperties.AutomationId="dbc.valueExplorerChannel"/>
+                        </DockPanel>
+                        <TextBlock Text="{Binding DbcValues.Summary}" TextWrapping="Wrap"
+                                   FontWeight="SemiBold" Margin="0,7,0,4"
+                                   AutomationProperties.AutomationId="dbc.valueExplorerSummary"/>
+                        <TextBlock Text="{Binding DbcValues.RawDomain}" TextWrapping="Wrap"
+                                   FontFamily="Consolas" FontSize="10.5" Margin="0,0,0,3"/>
+                        <TextBlock Text="{Binding DbcValues.PhysicalRange}" TextWrapping="Wrap"
+                                   FontFamily="Consolas" FontSize="10.5" Margin="0,0,0,3"/>
+                        <TextBlock Text="{Binding DbcValues.Warning}" TextWrapping="Wrap"
+                                   FontSize="10.5" Foreground="{DynamicResource WarningBrush}"
+                                   AutomationProperties.AutomationId="dbc.valueExplorerWarning"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                          <Button Content="Open first source frame" Margin="0,0,8,0"
+                                  Command="{Binding DbcValues.OpenFirstFrameCommand}"
+                                  AutomationProperties.AutomationId="dbc.valueExplorerFirst"/>
+                          <Button Content="Open last source frame"
+                                  Command="{Binding DbcValues.OpenLastFrameCommand}"
+                                  AutomationProperties.AutomationId="dbc.valueExplorerLast"/>
+                        </StackPanel>
+                      </StackPanel>
+                      <DataGrid ItemsSource="{Binding DbcValues.RawCodes}"
+                                SelectedItem="{Binding DbcValues.SelectedRawCode}"
+                                AutoGenerateColumns="False" IsReadOnly="True"
+                                CanUserSortColumns="True" EnableRowVirtualization="True"
+                                AutomationProperties.AutomationId="dbc.valueExplorerGrid"
+                                AutomationProperties.Name="Exact observed raw CAN code histogram and declared meaning">
+                        <DataGrid.Columns>
+                          <DataGridTextColumn Header="Raw (exact)" Binding="{Binding ExactRaw}" Width="130"/>
+                          <DataGridTextColumn Header="Raw HEX" Binding="{Binding HexRaw}" Width="145"/>
+                          <DataGridTextColumn Header="DBC meaning" Binding="{Binding Meaning}" Width="*"/>
+                          <DataGridTextColumn Header="Count" Binding="{Binding ObservedCount}" Width="78"/>
+                          <DataGridTextColumn Header="First frame" Binding="{Binding FirstFrameText}" Width="90"/>
+                          <DataGridTextColumn Header="Last frame" Binding="{Binding LastFrameText}" Width="90"/>
+                        </DataGrid.Columns>
+                      </DataGrid>
+                    </DockPanel>
+                  </TabItem>
+                  <TabItem Header="Source attributes">
+                    <DockPanel Margin="6">
+                      <TextBlock DockPanel.Dock="Top" Text="{Binding DbcInspector.AttributeSummary}"
+                                 Style="{StaticResource MutedText}" TextWrapping="Wrap"
+                                 Margin="0,0,0,6"/>
+                      <DataGrid ItemsSource="{Binding DbcInspector.SourceAttributes}" IsReadOnly="True"
+                                AutoGenerateColumns="False" CanUserSortColumns="True"
+                                EnableRowVirtualization="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                                AutomationProperties.Name="Original message and signal DBC attributes">
+                        <DataGrid.Columns>
+                          <DataGridTextColumn Header="Scope" Binding="{Binding Scope}" Width="85"/>
+                          <DataGridTextColumn Header="DBC attribute" Binding="{Binding Name}" Width="180"/>
+                          <DataGridTextColumn Header="Original value" Binding="{Binding RawValue}" Width="*"/>
+                        </DataGrid.Columns>
+                      </DataGrid>
+                    </DockPanel>
+                  </TabItem>
+                  <TabItem Header="Consistency check" AutomationProperties.AutomationId="dbc.consistencyTab">
+                    <DockPanel Margin="6">
+                      <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,6">
+                        <Button Content="Run consistency check" Padding="10,3" Click="OnRunConsistencyClick"
+                                AutomationProperties.AutomationId="dbc.consistencyRun"
+                                ToolTip="Runs the documented DBC-0xx rules on the selected database (definition-only, no ECU access)"/>
+                        <Button Content="Export CSV" Padding="10,3" Margin="8,0,0,0" Click="OnExportConsistencyClick"
+                                x:Name="ConsistencyExportButton" IsEnabled="False"
+                                AutomationProperties.AutomationId="dbc.consistencyExport"/>
+                      </StackPanel>
+                      <TextBlock DockPanel.Dock="Top" x:Name="ConsistencySummary" TextWrapping="Wrap" Margin="0,0,0,6"
+                                 Style="{StaticResource MutedText}"
+                                 Text="Select a DBC and run the check. Each finding carries a rule ID (DBC-001 ...) with a severity."/>
+                      <DataGrid x:Name="ConsistencyGrid" IsReadOnly="True" AutoGenerateColumns="False" CanUserSortColumns="True"
+                                EnableRowVirtualization="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                                AutomationProperties.Name="DBC consistency check findings">
+                        <DataGrid.Columns>
+                          <DataGridTextColumn Header="Severity" Binding="{Binding Severity}" Width="75"/>
+                          <DataGridTextColumn Header="Rule" Binding="{Binding Rule.Id}" Width="70"/>
+                          <DataGridTextColumn Header="Check" Binding="{Binding Rule.Title}" Width="200"/>
+                          <DataGridTextColumn Header="Message / object" Binding="{Binding Subject}" Width="160"/>
+                          <DataGridTextColumn Header="Signal" Binding="{Binding Signal}" Width="130"/>
+                          <DataGridTextColumn Header="Detail" Binding="{Binding Detail}" Width="*"/>
+                        </DataGrid.Columns>
+                      </DataGrid>
+                    </DockPanel>
+                  </TabItem>
+                  <TabItem Header="Nodes &amp; attributes" AutomationProperties.AutomationId="dbc.nodesTab">
+                    <DockPanel Margin="6">
+                      <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,6">
+                        <Button Content="Read nodes and attributes" Padding="10,3" Click="OnReadNodesClick"
+                                AutomationProperties.AutomationId="dbc.nodesRead"
+                                ToolTip="Reads BU_, BO_TX_BU_ and typed BA_DEF_/BA_DEF_DEF_/BA_ statements of the selected DBC file (definition-only)"/>
+                        <Button Content="Export network matrix CSV" Padding="10,3" Margin="8,0,0,0" Click="OnExportMatrixClick"
+                                x:Name="NodeMatrixExportButton" IsEnabled="False"
+                                AutomationProperties.AutomationId="dbc.nodesExport"/>
+                      </StackPanel>
+                      <TextBlock DockPanel.Dock="Top" x:Name="NodesSummary" TextWrapping="Wrap" Margin="0,0,0,6"
+                                 Style="{StaticResource MutedText}"
+                                 Text="Select a DBC and read it. Tx/Rx comes from the database declaration, not from observed traffic."/>
+                      <TabControl>
+                        <TabItem Header="Nodes (Tx / Rx)">
+                          <DataGrid x:Name="NodesGrid" IsReadOnly="True" AutoGenerateColumns="False" CanUserSortColumns="True"
+                                    AutomationProperties.Name="DBC nodes with transmitted and received messages">
+                            <DataGrid.Columns>
+                              <DataGridTextColumn Header="Node" Binding="{Binding Name}" Width="160"/>
+                              <DataGridTextColumn Header="Tx messages" Binding="{Binding TxText}" Width="*"/>
+                              <DataGridTextColumn Header="Rx messages" Binding="{Binding RxText}" Width="*"/>
+                              <DataGridTextColumn Header="Comment" Binding="{Binding Comment}" Width="160"/>
+                            </DataGrid.Columns>
+                          </DataGrid>
+                        </TabItem>
+                        <TabItem Header="Attribute definitions">
+                          <DataGrid x:Name="AttrDefGrid" IsReadOnly="True" AutoGenerateColumns="False" CanUserSortColumns="True"
+                                    AutomationProperties.Name="Typed DBC attribute definitions">
+                            <DataGrid.Columns>
+                              <DataGridTextColumn Header="Attribute" Binding="{Binding Name}" Width="200"/>
+                              <DataGridTextColumn Header="Object" Binding="{Binding Scope}" Width="90"/>
+                              <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="70"/>
+                              <DataGridTextColumn Header="Range / enum" Binding="{Binding RangeText}" Width="*"/>
+                              <DataGridTextColumn Header="Default" Binding="{Binding DefaultText}" Width="160"/>
+                            </DataGrid.Columns>
+                          </DataGrid>
+                        </TabItem>
+                        <TabItem Header="Attribute values">
+                          <DataGrid x:Name="AttrValueGrid" IsReadOnly="True" AutoGenerateColumns="False" CanUserSortColumns="True"
+                                    AutomationProperties.Name="DBC attribute values">
+                            <DataGrid.Columns>
+                              <DataGridTextColumn Header="Attribute" Binding="{Binding Name}" Width="180"/>
+                              <DataGridTextColumn Header="Object" Binding="{Binding Scope}" Width="90"/>
+                              <DataGridTextColumn Header="Target" Binding="{Binding Target}" Width="200"/>
+                              <DataGridTextColumn Header="Value" Binding="{Binding DisplayValue}" Width="*"/>
+                              <DataGridTextColumn Header="Problem" Binding="{Binding Problem}" Width="200"/>
+                            </DataGrid.Columns>
+                          </DataGrid>
+                        </TabItem>
+                      </TabControl>
+                    </DockPanel>
+                  </TabItem>
+                  <TabItem Header="Edit DBC (working copy)" AutomationProperties.AutomationId="dbc.editorTab">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                                  Margin="8" AutomationProperties.Name="Non-destructive DBC signal editor">
+                      <StackPanel>
+                        <TextBlock Text="{Binding DbcEditor.SelectedSummary}" FontWeight="SemiBold"
+                                   TextWrapping="Wrap" Margin="0,0,0,5"/>
+                        <TextBlock Text="Edits are staged in a working copy only. The original file, trace evidence and active decoder remain unchanged. Unsupported ARXML and vendor-specific metadata are not rewritten."
+                                   Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <UniformGrid Columns="3" Margin="0,0,0,5">
+                          <StackPanel Margin="0,0,10,5">
+                            <TextBlock Text="Start bit" Style="{StaticResource MutedText}"/>
+                            <TextBox Text="{Binding DbcEditor.StartBitText, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding DbcEditor.CanEdit}" AutomationProperties.Name="Signal start bit"/>
+                          </StackPanel>
+                          <StackPanel Margin="0,0,10,5">
+                            <TextBlock Text="Bit length" Style="{StaticResource MutedText}"/>
+                            <TextBox Text="{Binding DbcEditor.BitLengthText, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding DbcEditor.CanEdit}" AutomationProperties.Name="Signal length in bits"/>
+                          </StackPanel>
+                          <StackPanel Margin="0,0,10,5">
+                            <TextBlock Text="Byte order" Style="{StaticResource MutedText}"/>
+                            <ComboBox ItemsSource="{Binding DbcEditor.ByteOrderChoices}"
+                                      SelectedIndex="{Binding DbcEditor.ByteOrderIndex}"
+                                      IsEnabled="{Binding DbcEditor.CanEdit}" AutomationProperties.Name="Signal byte order"/>
+                          </StackPanel>
+                          <StackPanel Margin="0,0,10,5">
+                            <TextBlock Text="Scale factor" Style="{StaticResource MutedText}"/>
+                            <TextBox Text="{Binding DbcEditor.FactorText, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding DbcEditor.CanEdit}" AutomationProperties.Name="Signal factor" AutomationProperties.AutomationId="dbc.editorFactor"/>
+                          </StackPanel>
+                          <StackPanel Margin="0,0,10,5">
+                            <TextBlock Text="Offset" Style="{StaticResource MutedText}"/>
+                            <TextBox Text="{Binding DbcEditor.OffsetText, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding DbcEditor.CanEdit}" AutomationProperties.Name="Signal offset"/>
+                          </StackPanel>
+                          <StackPanel Margin="0,0,10,5">
+                            <TextBlock Text="Physical unit" Style="{StaticResource MutedText}"/>
+                            <TextBox Text="{Binding DbcEditor.UnitText, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding DbcEditor.CanEdit}" AutomationProperties.Name="Signal unit" AutomationProperties.AutomationId="dbc.editorUnit"/>
+                          </StackPanel>
+                          <StackPanel Margin="0,0,10,5">
+                            <TextBlock Text="Physical min" Style="{StaticResource MutedText}"/>
+                            <TextBox Text="{Binding DbcEditor.MinimumText, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding DbcEditor.CanEdit}" AutomationProperties.Name="Signal minimum"/>
+                          </StackPanel>
+                          <StackPanel Margin="0,0,10,5">
+                            <TextBlock Text="Physical max" Style="{StaticResource MutedText}"/>
+                            <TextBox Text="{Binding DbcEditor.MaximumText, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding DbcEditor.CanEdit}" AutomationProperties.Name="Signal maximum"/>
+                          </StackPanel>
+                          <StackPanel Margin="0,12,10,5">
+                            <CheckBox Content="Signed" IsChecked="{Binding DbcEditor.IsSigned}"
+                                      IsEnabled="{Binding DbcEditor.CanEdit}" AutomationProperties.Name="Signed signal encoding"/>
+                          </StackPanel>
+                        </UniformGrid>
+                        <TextBlock Text="{Binding DbcEditor.PreviewText}" TextWrapping="Wrap"
+                                   FontFamily="Consolas" FontSize="11" Margin="0,0,0,8"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                          <Button Content="Stage edit" Command="{Binding DbcEditor.StageCommand}"
+                                  IsEnabled="{Binding DbcEditor.CanEdit}" Margin="0,0,7,0"
+                                  Style="{StaticResource AccentButton}" AutomationProperties.Name="Stage DBC signal edit" AutomationProperties.AutomationId="dbc.stageEdit"/>
+                          <Button Content="Revert signal" Command="{Binding DbcEditor.RevertSignalCommand}"
+                                  IsEnabled="{Binding DbcEditor.CanEdit}" Margin="0,0,7,0"/>
+                          <Button Content="Undo" Command="{Binding DbcEditor.UndoCommand}"
+IsEnabled="{Binding DbcEditor.CanUndo}" Margin="0,0,7,0"
+AutomationProperties.Name="Undo staged DBC edit"
+AutomationProperties.AutomationId="dbc.undo"
+ToolTip="Undo the most recent staged signal or VAL_ change; source and active decoder stay unchanged"/>
+<Button Content="Redo" Command="{Binding DbcEditor.RedoCommand}"
+IsEnabled="{Binding DbcEditor.CanRedo}" Margin="0,0,7,0"
+AutomationProperties.Name="Redo staged DBC edit"
+AutomationProperties.AutomationId="dbc.redo"
+ToolTip="Restore the most recently undone staged signal or VAL_ change"/>
+<Button Content="Discard all" AutomationProperties.AutomationId="dbc.discard" Command="{Binding DbcEditor.DiscardAllCommand}"
+                                  IsEnabled="{Binding DbcEditor.CanSave}" Margin="0,0,7,0"/>
+                          <Button Content="Save DBC copy…" Command="{Binding DbcEditor.SaveAsCommand}"
+                                  IsEnabled="{Binding DbcEditor.CanSave}"
+                                  ToolTip="Validates and creates a new DBC; original and existing target files cannot be overwritten"
+                                  AutomationProperties.Name="Save staged DBC edits as a new DBC" AutomationProperties.AutomationId="dbc.saveCopy"/>
+                        </StackPanel>
+                        <TextBlock Text="Raw value meanings (VAL_) — source definitions, not observed trace values"
+                                   FontWeight="SemiBold" Margin="0,8,0,4"/>
+                        <TextBlock Text="{Binding DbcEditor.NamedValueSummary}" TextWrapping="Wrap"
+                                   Style="{StaticResource MutedText}" FontSize="11" Margin="0,0,0,5"/>
+                        <DataGrid x:Name="DbcNamedValuesEditorGrid" AutomationProperties.AutomationId="dbc.valueEditorGrid"
+                                  ItemsSource="{Binding DbcEditor.NamedValueRows}"
+                                  SelectedItem="{Binding DbcEditor.SelectedNamedValue}"
+                                  IsReadOnly="False" IsEnabled="{Binding DbcEditor.CanEdit}"
+                                  AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                                  CanUserSortColumns="False" Height="140" RowHeight="26" Margin="0,0,0,6"
+                                  AutomationProperties.Name="Edit symbolic DBC raw value meanings">
+                          <DataGrid.Columns>
+                            <DataGridTextColumn Header="Raw (dec / hex)"
+                              Binding="{Binding RawCode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              Width="130" MinWidth="110"/>
+                            <DataGridTextColumn Header="Meaning from DBC"
+                              Binding="{Binding Meaning, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              Width="*" MinWidth="200"/>
+                          </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                          <Button Content="Add code" Command="{Binding DbcEditor.AddNamedValueCommand}"
+                                  IsEnabled="{Binding DbcEditor.CanEdit}" Margin="0,0,7,0"
+                                  AutomationProperties.Name="Add raw value code" AutomationProperties.AutomationId="dbc.addValue"/>
+                          <Button Content="Remove selected code"
+                                  Command="{Binding DbcEditor.RemoveNamedValueCommand}"
+                                  IsEnabled="{Binding DbcEditor.CanEdit}" Margin="0,0,7,0"
+                                  AutomationProperties.Name="Remove selected value code"/>
+                          <Button Content="Stage VAL_ values" Command="{Binding DbcEditor.StageNamedValuesCommand}"
+                                  IsEnabled="{Binding DbcEditor.CanEdit}"
+                                  ToolTip="Validate decimal/hex codes and meanings in the working copy without changing the original DBC"
+                                  AutomationProperties.Name="Stage symbolic raw value meanings" AutomationProperties.AutomationId="dbc.stageValues"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding DbcEditor.StatusText}" TextWrapping="Wrap"
+                                   Margin="0,0,0,8"/>
+                        <TextBlock Text="{Binding DbcEditor.ChangesSummary}" FontWeight="SemiBold"
+                                   TextWrapping="Wrap" Margin="0,0,0,5"/>
+                        <DataGrid ItemsSource="{Binding DbcEditor.ChangeRows}" IsReadOnly="True"
+                                  AutoGenerateColumns="False" CanUserSortColumns="True"
+                                  MinHeight="95" MaxHeight="180"
+                                  EnableRowVirtualization="True"
+                                  AutomationProperties.Name="Staged DBC signal changes before Save As">
+                          <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding Identifier}" Width="100"/>
+                            <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="120"/>
+                            <DataGridTextColumn Header="Signal" Binding="{Binding Signal}" Width="150"/>
+                            <DataGridTextColumn Header="Before → after" Binding="{Binding Differences}" Width="*"/>
+                          </DataGrid.Columns>
+                        </DataGrid>
+                      </StackPanel>
+                    </ScrollViewer>
+                  </TabItem>
+                  <TabItem Header="Recorded evidence">
+                    <StackPanel Margin="8">
+                      <TextBlock Text="Select physical CAN channel" Style="{StaticResource MutedText}" FontSize="11"/>
+                      <ComboBox ItemsSource="{Binding DbcInspector.ChannelChoices}"
+                                SelectedIndex="{Binding DbcInspector.SelectedChannelIndex}" MaxWidth="360"
+                                HorizontalAlignment="Left" Margin="0,4,0,10"
+                                AutomationProperties.Name="DBC signal observed CAN channel"/>
+                      <TextBlock Text="{Binding DbcInspector.ExampleText}" TextWrapping="Wrap"
+                                 FontFamily="Consolas" FontSize="11.5" Margin="0,0,0,8"/>
+                      <TextBlock Text="The Bit layout tab also overlays the actual raw 0/1 bits from this source frame. Original bit positions remain defined by DBC; a disabled multiplex branch is never decoded as an observed signal."
+                                 Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap"/>
+                    </StackPanel>
+                  </TabItem>
+                </TabControl>
+              </Grid>
+            </Border>
+  </Grid>
+</Window>

@@ -1,0 +1,87 @@
+<Window x:Class="RbgCanInsight.App.AnnotationsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Notes"
+        Width="900" Height="600" MinWidth="720" MinHeight="480"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BackgroundBrush}"
+        Icon="Assets/RbgCanInsight.png">
+  <DockPanel Margin="12">
+    <Border DockPanel.Dock="Top" Style="{StaticResource Card}" Padding="14" Margin="0,0,0,10">
+      <StackPanel>
+        <TextBlock Text="Notes" FontSize="20" FontWeight="SemiBold" />
+        <TextBlock x:Name="SummaryText" Style="{StaticResource MutedText}" TextWrapping="Wrap"
+                   AutomationProperties.AutomationId="annotations.summary" />
+      </StackPanel>
+    </Border>
+
+    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+      <Button Content="Export CSV…" Click="OnExportCsvClick" Margin="0,0,8,0"
+              AutomationProperties.AutomationId="annotations.exportCsv" AutomationProperties.Name="Export notes as CSV"
+              ToolTip="Write all notes to a CSV file" />
+      <Button Content="Export Markdown…" Click="OnExportMarkdownClick" Margin="0,0,8,0"
+              AutomationProperties.AutomationId="annotations.exportMarkdown" AutomationProperties.Name="Export notes as Markdown"
+              ToolTip="Write all notes to a Markdown file" />
+      <Button Content="Close" Click="OnCloseClick"
+              AutomationProperties.AutomationId="annotations.close" AutomationProperties.Name="Close notes" />
+    </StackPanel>
+
+    <Grid>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="340" />
+      </Grid.ColumnDefinitions>
+
+      <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,10,0">
+        <ListBox x:Name="NoteList" SelectionChanged="OnSelectionChanged" DisplayMemberPath="Display"
+                 AutomationProperties.AutomationId="annotations.list" AutomationProperties.Name="Notes list" />
+      </Border>
+
+      <Border Grid.Column="1" Style="{StaticResource Card}" Padding="12,12,4,12">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="0,0,8,0">
+          <TextBlock Text="Title" />
+          <TextBox x:Name="TitleBox" Margin="0,2,0,8"
+                   AutomationProperties.AutomationId="annotations.title" AutomationProperties.Name="Note title" />
+          <TextBlock Text="Note" />
+          <TextBox x:Name="NoteBox" MinHeight="64" MaxHeight="120" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="0,2,0,8"
+                   AutomationProperties.AutomationId="annotations.note" AutomationProperties.Name="Note text" />
+          <TextBlock Text="Tags (comma separated)" />
+          <TextBox x:Name="TagsBox" Margin="0,2,0,8"
+                   AutomationProperties.AutomationId="annotations.tags" AutomationProperties.Name="Note tags" />
+          <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+            <RadioButton x:Name="TimeRadio" Content="Time range (s)" IsChecked="True" Margin="0,0,12,0"
+                         AutomationProperties.AutomationId="annotations.rangeTime" AutomationProperties.Name="Time range" />
+            <RadioButton x:Name="FrameRadio" Content="Frame range"
+                         AutomationProperties.AutomationId="annotations.rangeFrames" AutomationProperties.Name="Frame range" />
+          </StackPanel>
+          <Grid Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="StartBox" ToolTip="Start (seconds or frame index)"
+                     AutomationProperties.AutomationId="annotations.start" AutomationProperties.Name="Range start" />
+            <TextBox x:Name="EndBox" Grid.Column="2" ToolTip="End (seconds or frame index)"
+                     AutomationProperties.AutomationId="annotations.end" AutomationProperties.Name="Range end" />
+          </Grid>
+          <Button Content="Use selected Trace frame" Click="OnUseSelectionClick" Margin="0,0,0,10"
+                  AutomationProperties.AutomationId="annotations.useSelection" AutomationProperties.Name="Use selected Trace frame"
+                  ToolTip="Fill the range from the frame selected on the Trace page" />
+          <TextBlock x:Name="ErrorText" Foreground="{DynamicResource ErrorBrush}" TextWrapping="Wrap" Margin="0,0,0,6"
+                     AutomationProperties.AutomationId="annotations.error" />
+          <WrapPanel Margin="0,0,0,2">
+            <Button Content="Add" Click="OnAddClick" Margin="0,0,8,4"
+                    AutomationProperties.AutomationId="annotations.add" AutomationProperties.Name="Add note" />
+            <Button Content="Update selected" Click="OnUpdateClick" Margin="0,0,8,4"
+                    AutomationProperties.AutomationId="annotations.update" AutomationProperties.Name="Update selected note" />
+            <Button Content="Delete" Click="OnDeleteClick" Margin="0,0,8,4"
+                    AutomationProperties.AutomationId="annotations.delete" AutomationProperties.Name="Delete selected note" />
+          </WrapPanel>
+          <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,8,0,0"
+                     Text="Notes are kept in the current project and written when you save the project. Trace files are never modified." />
+        </StackPanel>
+        </ScrollViewer>
+      </Border>
+    </Grid>
+  </DockPanel>
+</Window>

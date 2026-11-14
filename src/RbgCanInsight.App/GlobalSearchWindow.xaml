@@ -1,0 +1,86 @@
+<Window x:Class="RbgCanInsight.App.GlobalSearchWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:common="clr-namespace:RbgCanInsight.App.Common"
+        Title="Search"
+        Width="680" Height="480"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Deactivated="OnDeactivated">
+  <Window.Resources>
+    <common:IntEqualsToVisibilityConverter x:Key="EmptyWhenZero" />
+  </Window.Resources>
+  <Border Background="{DynamicResource SurfaceRaisedBrush}" BorderBrush="{DynamicResource AccentBrush}"
+          BorderThickness="1" CornerRadius="10" Margin="16">
+    <Border.Effect>
+      <DropShadowEffect BlurRadius="28" ShadowDepth="0" Opacity="0.45" Color="Black" />
+    </Border.Effect>
+    <DockPanel Margin="16">
+      <Grid DockPanel.Dock="Top">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBox Grid.Column="0" x:Name="QueryBox" AutomationProperties.AutomationId="globalSearch.query"
+                 FontSize="18" Padding="10,10"
+                 common:PlaceholderService.Text="Search signals, CAN IDs, DBCs, DIDs…"
+                 AutomationProperties.Name="Search across loaded CAN and diagnostic evidence"
+                 Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}"
+                 PreviewKeyDown="OnQueryPreviewKeyDown" />
+        <Button Grid.Column="1" Content="Clear" Margin="8,0,0,0" Padding="9,4"
+                Style="{StaticResource SubtleButton}"
+                Click="OnClearQueryClick" AutomationProperties.AutomationId="globalSearch.clear"
+                ToolTip="Erase the search text while keeping this window open" />
+        <Button Grid.Column="2" Content="Close" Margin="6,0,0,0" Padding="9,4"
+                Click="OnCloseClick" AutomationProperties.AutomationId="globalSearch.close"
+                ToolTip="Close the search window (Esc)" />
+      </Grid>
+      <TextBlock DockPanel.Dock="Top" Margin="2,8,0,8" Style="{StaticResource MutedText}" FontSize="11.5"
+                 Text="Type to search recorded signals, CAN IDs, DBCs and DIDs · Click Open or use ↑↓ + Enter · Esc closes" />
+      <TextBlock DockPanel.Dock="Bottom" Margin="2,8,0,0" Style="{StaticResource MutedText}" FontSize="11"
+                 Text="{Binding Results.Count, StringFormat='{}{0} result(s)'}" />
+      <Grid>
+        <ListBox x:Name="ResultsList" AutomationProperties.AutomationId="globalSearch.results"
+                 ItemsSource="{Binding Results}" SelectedIndex="{Binding SelectedIndex}"
+                 BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 MouseDoubleClick="OnResultDoubleClick">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <Grid Margin="6,5">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                  <StackPanel Orientation="Horizontal">
+                    <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="4" Padding="6,1" Margin="0,0,8,0" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Category}" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" />
+                    </Border>
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13.5" />
+                  </StackPanel>
+                  <TextBlock Text="{Binding Subtitle}" Style="{StaticResource MutedText}" FontSize="11.5" Margin="0,2,0,0"
+                             TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Button Grid.Column="1" Content="Open" Margin="10,0,0,0" VerticalAlignment="Center"
+                        Style="{StaticResource SubtleButton}" Click="OnResultOpenClick"
+                        AutomationProperties.AutomationId="globalSearch.openResult"
+                        AutomationProperties.Name="Open this exact search result"
+                        ToolTip="Go to the recorded source and corresponding workspace" />
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+        <TextBlock Text="{Binding EmptyStateText}" Style="{StaticResource MutedText}"
+                   Visibility="{Binding Results.Count, Converter={StaticResource EmptyWhenZero}, ConverterParameter=0}"
+                   AutomationProperties.AutomationId="globalSearch.empty"
+                   TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center"
+                   TextWrapping="Wrap" MaxWidth="480" Margin="20" />
+      </Grid>
+    </DockPanel>
+  </Border>
+</Window>

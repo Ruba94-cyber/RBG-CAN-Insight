@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <AssemblyName>RbgCanInsight</AssemblyName>
+    <RootNamespace>RbgCanInsight.App</RootNamespace>
+    <ApplicationIcon>Assets\RbgCanInsight.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="Assets\RbgCanInsight.ico" />
+    <Resource Include="Assets\RbgCanInsight.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RbgCanInsight.Domain\RbgCanInsight.Domain.csproj" />
+    <ProjectReference Include="..\RbgCanInsight.Dbc\RbgCanInsight.Dbc.csproj" />
+    <ProjectReference Include="..\RbgCanInsight.TraceIO\RbgCanInsight.TraceIO.csproj" />
+    <ProjectReference Include="..\RbgCanInsight.Analysis\RbgCanInsight.Analysis.csproj" />
+    <ProjectReference Include="..\RbgCanInsight.DiagData\RbgCanInsight.DiagData.csproj" />
+    <ProjectReference Include="..\RbgCanInsight.Correlation\RbgCanInsight.Correlation.csproj" />
+    <ProjectReference Include="..\RbgCanInsight.Diagnostics\RbgCanInsight.Diagnostics.csproj" />
+  </ItemGroup>
+</Project>

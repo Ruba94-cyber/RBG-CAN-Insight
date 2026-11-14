@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="fixtures\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\RbgCanInsight.Domain\RbgCanInsight.Domain.csproj" />
+    <ProjectReference Include="..\..\src\RbgCanInsight.Dbc\RbgCanInsight.Dbc.csproj" />
+    <ProjectReference Include="..\..\src\RbgCanInsight.TraceIO\RbgCanInsight.TraceIO.csproj" />
+    <ProjectReference Include="..\..\src\RbgCanInsight.Analysis\RbgCanInsight.Analysis.csproj" />
+    <ProjectReference Include="..\..\src\RbgCanInsight.DiagData\RbgCanInsight.DiagData.csproj" />
+    <ProjectReference Include="..\..\src\RbgCanInsight.Correlation\RbgCanInsight.Correlation.csproj" />
+    <ProjectReference Include="..\..\src\RbgCanInsight.Diagnostics\RbgCanInsight.Diagnostics.csproj" />
+    <ProjectReference Include="..\..\tools\RbgCanInsight.TraceVerify\RbgCanInsight.TraceVerify.csproj" />
+    <ProjectReference Include="..\..\tools\RbgCanInsight.Cli\RbgCanInsight.Cli.csproj" />
+  </ItemGroup>
+</Project>

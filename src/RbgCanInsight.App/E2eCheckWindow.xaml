@@ -1,0 +1,111 @@
+<Window x:Class="RbgCanInsight.App.E2eCheckWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="E2E check" Width="1180" Height="700" MinWidth="820" MinHeight="460"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BackgroundBrush}"
+        Icon="Assets/RbgCanInsight.png">
+  <Grid Margin="12">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="340" MinWidth="300" />
+      <ColumnDefinition Width="12" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+
+    <!-- Left: ID list + settings -->
+    <DockPanel Grid.Column="0">
+      <TextBlock DockPanel.Dock="Top" Text="1. Pick a CAN ID (type to filter)" Style="{StaticResource SectionTitle}" Margin="0,0,0,6" />
+      <TextBox DockPanel.Dock="Top" x:Name="SearchBox" Margin="0,0,0,6" TextChanged="OnSearchChanged"
+               AutomationProperties.AutomationId="e2e.search" AutomationProperties.Name="Search CAN IDs"
+               ToolTip="Filter by ID in hex (for example 1A0) or by channel (for example ch 1)" />
+      <!-- The main action stays outside the scrolling settings so it can never be clipped. -->
+      <Button x:Name="CheckButton" DockPanel.Dock="Bottom" Content="Check" Style="{StaticResource AccentButton}" Padding="12,9" FontSize="14"
+              Margin="0,8,0,0" IsEnabled="False"
+              ToolTip="Select a CAN ID in step 1 to enable the check"
+              Click="OnCheckClick" AutomationProperties.AutomationId="e2e.check" AutomationProperties.Name="Check" />
+      <ScrollViewer DockPanel.Dock="Bottom" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="340" Margin="0,8,0,0">
+        <StackPanel x:Name="SettingsPanel" IsEnabled="False" Margin="0,0,8,6">
+          <TextBlock Text="2. Choose the E2E settings" Style="{StaticResource SectionTitle}" Margin="0,0,0,6" />
+          <TextBlock x:Name="Explainer" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,8"
+                     Text="E2E protects a message with a counter and a CRC; pick the profile your ECU uses." />
+          <Button x:Name="HintButton" Visibility="Collapsed" Margin="0,0,0,8" HorizontalContentAlignment="Left"
+                  Click="OnHintClick" AutomationProperties.AutomationId="e2e.hint" AutomationProperties.Name="Apply detected settings">
+            <TextBlock x:Name="HintText" TextWrapping="Wrap" />
+          </Button>
+          <TextBlock Text="Profile" Margin="0,0,0,2" />
+          <ComboBox x:Name="ProfileBox" SelectedIndex="0" Margin="0,0,0,8" SelectionChanged="OnProfileChanged"
+                    AutomationProperties.AutomationId="e2e.profile" AutomationProperties.Name="E2E profile">
+            <ComboBoxItem Content="Profile 1" Tag="P01" />
+            <ComboBoxItem Content="Profile 2" Tag="P02" />
+            <ComboBoxItem Content="Profile 5" Tag="P05" />
+          </ComboBox>
+          <TextBlock Text="Data ID (hex)" Margin="0,0,0,2" />
+          <TextBox x:Name="DataIdBox" Margin="0,0,0,8" MaxLength="6"
+                   AutomationProperties.AutomationId="e2e.dataId" AutomationProperties.Name="Data ID in hex"
+                   ToolTip="The 16-bit Data ID of this message from your E2E configuration, for example 1A2B" />
+          <TextBlock Text="Expected cycle time (ms, optional)" Margin="0,0,0,2" />
+          <TextBox x:Name="CycleBox" Margin="0,0,0,8"
+                   AutomationProperties.AutomationId="e2e.cycle" AutomationProperties.Name="Expected cycle time in milliseconds"
+                   ToolTip="Used to flag gaps longer than twice the cycle time" />
+          <Grid Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="8" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+              <TextBlock Text="CRC byte" Margin="0,0,0,2" />
+              <TextBox x:Name="CrcByteBox" Text="0"
+                       AutomationProperties.AutomationId="e2e.crcByte" AutomationProperties.Name="CRC byte index"
+                       ToolTip="Index of the CRC byte in the payload (0 is the first byte)" />
+            </StackPanel>
+            <StackPanel Grid.Column="2">
+              <TextBlock Text="Counter bit" Margin="0,0,0,2" />
+              <TextBox x:Name="CounterBitBox" Text="8"
+                       AutomationProperties.AutomationId="e2e.counterBit" AutomationProperties.Name="Counter start bit"
+                       ToolTip="Start bit of the counter: 8 is the low nibble of byte 1, 12 its high nibble" />
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </ScrollViewer>
+      <ListBox x:Name="IdList" SelectionChanged="OnIdSelected" FontFamily="Consolas"
+               AutomationProperties.AutomationId="e2e.idList" AutomationProperties.Name="CAN IDs in the trace" />
+    </DockPanel>
+
+    <!-- Right: result -->
+    <DockPanel Grid.Column="2">
+      <TextBlock DockPanel.Dock="Top" Text="3. Read the result" Style="{StaticResource SectionTitle}" Margin="0,0,0,6" />
+      <Border DockPanel.Dock="Top" x:Name="Chip" Padding="12,8" Margin="0,0,0,8" BorderThickness="2"
+              CornerRadius="6" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}">
+        <StackPanel>
+          <TextBlock x:Name="SummaryHeadline" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"
+                     Foreground="{DynamicResource TextPrimaryBrush}"
+                     AutomationProperties.AutomationId="e2e.summary" AutomationProperties.Name="E2E result"
+                     Text="Pick a CAN ID, choose the settings and press Check." />
+          <TextBlock x:Name="SummaryDetails" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,4,0,0"
+                     AutomationProperties.AutomationId="e2e.details" AutomationProperties.Name="E2E result details" />
+        </StackPanel>
+      </Border>
+      <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+        <Button DockPanel.Dock="Right" x:Name="ExportButton" Content="Export CSV…" IsEnabled="False" Click="OnExportClick"
+                AutomationProperties.AutomationId="e2e.export" AutomationProperties.Name="Export CSV" />
+        <CheckBox x:Name="ProblemsOnly" Content="Only problems" VerticalAlignment="Center" Checked="OnProblemsOnlyClick" Unchecked="OnProblemsOnlyClick"
+                  AutomationProperties.AutomationId="e2e.problemsOnly" AutomationProperties.Name="Only problems" />
+      </DockPanel>
+      <DataGrid x:Name="ResultGrid" IsReadOnly="True" AutoGenerateColumns="False" CanUserSortColumns="True"
+                SelectionMode="Extended" FontSize="12.5" HeadersVisibility="Column"
+                AutomationProperties.AutomationId="e2e.grid" AutomationProperties.Name="Per-frame results">
+        <DataGrid.Columns>
+          <DataGridTextColumn Header="Message" Binding="{Binding Message}" />
+          <DataGridTextColumn Header="Time (s)" Binding="{Binding Time}" />
+          <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="170" />
+          <DataGridTextColumn Header="Counter" Binding="{Binding Counter}" />
+          <DataGridTextColumn Header="Received CRC" Binding="{Binding ReceivedCrc}" />
+          <DataGridTextColumn Header="Expected CRC" Binding="{Binding ExpectedCrc}" />
+          <DataGridTextColumn Header="Lost" Binding="{Binding Lost}" />
+          <DataGridTextColumn Header="Gap (ms)" Binding="{Binding GapMs}" />
+        </DataGrid.Columns>
+      </DataGrid>
+    </DockPanel>
+  </Grid>
+</Window>

@@ -1,0 +1,69 @@
+<UserControl x:Class="RbgCanInsight.App.Controls.DecodedSignalGrid"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Name="Root">
+  <!--
+    Shared by Trace and Byte Matrix so the decoded-signal detail an analyst sees — and the
+    quick-plot/main-plot/watch/dedicated-window actions available on it — can never quietly
+    diverge between the two views the way two independently maintained copies eventually would.
+    Sorting is deliberately disabled: both hosts refresh this grid every playback tick, and a
+    sortable column would reorder rows out from under the operator while replaying.
+  -->
+  <DataGrid ItemsSource="{Binding SignalRows, ElementName=Root}"
+            IsReadOnly="True"
+            CanUserSortColumns="False"
+            HeadersVisibility="Column"
+            AutoGenerateColumns="False"
+            RowHeight="28"
+            MaxHeight="{Binding MaxRowsHeight, ElementName=Root}"
+            MouseDoubleClick="OnRowDoubleClick">
+    <DataGrid.RowStyle>
+      <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+        <Style.Triggers>
+          <DataTrigger Binding="{Binding IsChanged}" Value="True">
+            <Setter Property="Background" Value="{DynamicResource ChangedSignalHighlightBrush}" />
+          </DataTrigger>
+        </Style.Triggers>
+      </Style>
+    </DataGrid.RowStyle>
+    <DataGrid.Columns>
+      <DataGridTemplateColumn Header="Actions" Width="146" MinWidth="146" CanUserReorder="False">
+        <DataGridTemplateColumn.CellTemplate>
+          <DataTemplate>
+            <StackPanel Orientation="Horizontal">
+              <Button Content="⚡" ToolTip="Quick Plot: open this exact recorded CAN signal in a standalone chart"
+                      AutomationProperties.Name="Quick plot this signal"
+                      AutomationProperties.AutomationId="traceSignal.quickPlot"
+                      Click="OnOpenSignalDetailClick" Padding="8,2" Margin="0,0,4,0" />
+              <Button Content="＋" ToolTip="Add only this exact recorded signal to the main chart without changing pages or removing other curves"
+                      AutomationProperties.Name="Add this exact signal to the main plot without navigating"
+                      AutomationProperties.AutomationId="traceSignal.addToMain"
+                      Command="{Binding DataContext.QuickPlotTraceSignalCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                      CommandParameter="{Binding}" Padding="8,2" Margin="0,0,4,0" />
+              <Button Content="★" ToolTip="Pin this signal in the watch list"
+                      AutomationProperties.Name="Pin this signal in the watch list"
+                      Command="{Binding DataContext.WatchTraceSignalCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                      CommandParameter="{Binding}" Padding="8,2" Margin="0,0,4,0" />
+            </StackPanel>
+          </DataTemplate>
+        </DataGridTemplateColumn.CellTemplate>
+      </DataGridTemplateColumn>
+      <DataGridTextColumn Header="ECU" Binding="{Binding Ecu, Mode=OneWay}" Width="90" MinWidth="90" />
+      <DataGridTextColumn Header="DBC" Binding="{Binding DatabaseName}" Width="95" MinWidth="85" />
+      <DataGridTextColumn Header="Signal" Binding="{Binding Signal}" Width="170" MinWidth="170" />
+      <DataGridTextColumn Header="Previous" Binding="{Binding PreviousPhysical}" Width="120" MinWidth="120" />
+      <DataGridTextColumn Header="Current" Binding="{Binding Physical}" Width="95" MinWidth="95" />
+      <DataGridTextColumn Header="Δ" Binding="{Binding Delta}" Width="75" MinWidth="75" />
+      <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="55" MinWidth="55" />
+      <DataGridTextColumn Header="Raw" Binding="{Binding Raw}" Width="80" MinWidth="80" />
+      <DataGridTextColumn Header="Meaning" Binding="{Binding Meaning}" Width="*" MinWidth="140">
+        <DataGridTextColumn.ElementStyle>
+          <Style TargetType="TextBlock">
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Setter Property="ToolTip" Value="{Binding Meaning}" />
+          </Style>
+        </DataGridTextColumn.ElementStyle>
+      </DataGridTextColumn>
+    </DataGrid.Columns>
+  </DataGrid>
+</UserControl>

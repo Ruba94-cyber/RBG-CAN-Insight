@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ServerGarbageCollector>false</ServerGarbageCollector>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\RbgCanInsight.Domain\RbgCanInsight.Domain.csproj" />
+    <ProjectReference Include="..\..\src\RbgCanInsight.TraceIO\RbgCanInsight.TraceIO.csproj" />
+    <ProjectReference Include="..\..\src\RbgCanInsight.Dbc\RbgCanInsight.Dbc.csproj" />
+    <ProjectReference Include="..\..\src\RbgCanInsight.Analysis\RbgCanInsight.Analysis.csproj" />
+    <ProjectReference Include="..\..\src\RbgCanInsight.Diagnostics\RbgCanInsight.Diagnostics.csproj" />
+  </ItemGroup>
+</Project>
