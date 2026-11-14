@@ -22,9 +22,13 @@
   <img alt="Windows desktop" src="https://img.shields.io/badge/Windows-desktop-263238?logo=windows&logoColor=white" />
   <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white" />
   <img alt="Offline analysis" src="https://img.shields.io/badge/Analysis-offline%20only-24786E" />
-  <img alt="Application binaries free to use" src="https://img.shields.io/badge/App%20binaries-free%20to%20use-24786E" />
+  <img alt="Personal non-commercial use is free" src="https://img.shields.io/badge/Personal%20use-free-24786E" />
+  <img alt="Commercial use requires a license for new releases" src="https://img.shields.io/badge/Commercial%20use-paid%20license%20for%20new%20releases-76528E" />
   <img alt="Latest GitHub release" src="https://img.shields.io/github/v/release/Ruba94-cyber/RBG-CAN-Insight?label=release" />
 </p>
+
+> [!IMPORTANT]
+> **Licensing for future releases:** personal, non-commercial use is free; business and other commercial use requires a separate paid license. **Previously published v5.1.0 retains its original free-business-use terms**. See [Licensing](#licensing) for the precise version distinction.
 
 > [!IMPORTANT]
 > **Offline analysis only.** RBG CAN Insight reads recordings selected by the user. It **does not connect to vehicle interfaces, capture live traffic, transmit frames, send diagnostic requests, clear DTCs or perform ECU programming**. Diagnostic operations described in the app are operations *observed in a recording*, not actions the app can execute.
@@ -82,7 +86,10 @@ Format support can vary by format variant and application version. For example, 
 
 The documented portable layout includes local `config/`, `logs/`, `docs/` and `runtime/` directories alongside the executable. Keep the folder together when moving it between computers. If the folder is not writable, settings can fall back to `%LOCALAPPDATA%\RbgCanInsight`.
 
-A separately distributed **[Microsoft Store edition](https://apps.microsoft.com/detail/9NTZXFCKR81D)** is also available as a paid download. **Official GitHub application binaries are free to use, including commercially**; Store and GitHub versions may be published on different dates. The proprietary source code has separate terms.
+A separately distributed **[Microsoft Store edition](https://apps.microsoft.com/detail/9NTZXFCKR81D)** is also available as a paid download. The licensing policy for **future releases explicitly adopting the revised terms** is: **free for personal, non-commercial use**, with a **separate paid license required for business or other commercial use**. Store and GitHub releases may appear on different dates; purchasing the Store edition does not by itself grant commercial rights unless its applicable terms expressly say so.
+
+> [!NOTE]
+> **v5.1.0 remains under the terms offered when it was released**, which expressly permitted free business use. The revised conditions are **not retroactive**. A later release must explicitly adopt the [revised application terms](APPLICATION-TERMS.md) before they apply.
 
 > [!NOTE]
 > Use official release packages and verify any release-provided checksums or signing information before trusting an executable. A feature documented on the repository's main branch may not yet be present in an older release.
@@ -274,17 +281,29 @@ Found a problem or have an improvement idea? **[Open a GitHub issue](https://git
 
 ## Support development
 
-RBG CAN Insight is independently developed. If it is useful in your engineering workflow, optional donations help fund maintenance, testing, compatibility work and further improvements.
+RBG CAN Insight is independently developed. Optional donations help fund maintenance, testing, compatibility work and future improvements. **Donations do not replace or include a commercial license.**
 
 **[❤️ Support RBG CAN Insight with a PayPal donation](https://www.paypal.com/donate?business=paolo.ruba.1913%40gmail.com&no_recurring=0&item_name=Support+RBG+CAN+Insight&currency_code=EUR)**
 
 ## Licensing
 
-**Official GitHub application binaries:** free to use, including for commercial purposes, under the **[application terms](APPLICATION-TERMS.md)**.
+The **new distribution model** is designed to keep RBG CAN Insight accessible to individuals while requiring an agreement for professional deployment. **It applies only to future application releases that explicitly adopt the updated [application terms](APPLICATION-TERMS.md).**
 
-**Source code:** proprietary, all rights reserved. Copying, modifying, redistributing or commercially using the source requires permissions set out in the **[source-code license](LICENSE.md)** or a separate agreement. Public access to the repository does **not** make it open source.
+| Intended use | New-release licensing policy |
+| --- | --- |
+| **Personal learning, hobby or independent non-commercial projects** | **Free** for individual, non-commercial use |
+| **Personal non-commercial trace analysis** | **Free** when not performed for an employer, business or client |
+| **Internal company diagnostics, testing or validation** | **Separate paid commercial license required** |
+| **Professional consulting, paid services or client projects** | **Separate paid commercial license required** |
+| **Redistribution, source modification or integration into another product** | **Separate written permission** required |
 
-Third-party components retain their own terms.
+**Business use includes internal company use**, even if the software itself is not resold. For commercial licensing, contact **paolo.ruba.1913@gmail.com** before using a release governed by the new terms. A Microsoft Store purchase or voluntary donation is not automatically a commercial-use license; check the applicable terms.
+
+**Previously released versions retain their original rights.** In particular, **[v5.1.0](https://github.com/Ruba94-cyber/RBG-CAN-Insight/releases/tag/v5.1.0)** explicitly permitted free business use when published. Updating repository documentation does not revoke that previously granted permission.
+
+**Source code:** proprietary, all rights reserved under the **[source-code license](LICENSE.md)**. Public repository visibility does **not** mean the source is open source or available for reuse.
+
+For the detailed scope, version applicability, limitations and contact details, read the **[application terms](APPLICATION-TERMS.md)**. Third-party components retain their own license terms.
 
 ---
 
