@@ -6,7 +6,7 @@ The application interface is in English. See the [user guide](docs/USER_GUIDE.md
 
 ## Distribution and support
 
-The application is free to use, including for commercial use. A paid edition is available through the [Microsoft Store](https://apps.microsoft.com/detail/9NTZXFCKR81D). GitHub builds will be provided through this repository's releases when available; the two channels may have different release dates.
+The application is free to use, including for commercial use. [Download the latest GitHub release](https://github.com/Ruba94-cyber/RBG-CAN-Insight/releases/latest). A paid edition is available through the [Microsoft Store](https://apps.microsoft.com/detail/9NTZXFCKR81D); the two channels may have different release dates.
 
 If you would like to support development, you can [donate via PayPal](https://www.paypal.com/donate?business=paolo.ruba.1913%40gmail.com&no_recurring=0&item_name=Support+RBG+CAN+Insight&currency_code=EUR).
 
