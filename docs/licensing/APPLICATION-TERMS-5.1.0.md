@@ -1,3 +1,5 @@
+> **Historical document — valid only for release v5.1.0.** These terms do not apply to v5.2.0 or later releases, whose current terms are in `APPLICATION-TERMS.md` (free for personal, non-commercial use; business use needs a separate paid license). They are preserved so that rights already granted to recipients of v5.1.0 are not changed retroactively.
+
 # Official application binaries
 
 Copyright © 2026 Paolo Rubagotti. All rights reserved.
