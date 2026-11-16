@@ -143,10 +143,7 @@
                   </TabItem>
                   <TabItem Header="Observed raw values" AutomationProperties.AutomationId="dbc.valueExplorerTab">
                     <DockPanel Margin="6">
-                      <StackPanel DockPanel.Dock="Top" Margin="0,0,0,7">
-                        <TextBlock Text="{Binding DbcValues.Interpretation}" Style="{StaticResource MutedText}"
-                                   TextWrapping="Wrap" FontSize="10.5" Margin="0,0,0,6"/>
-                        <DockPanel>
+                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,7">
                           <Button Content="Analyze recorded codes" DockPanel.Dock="Right"
                                   Command="{Binding DbcValues.AnalyzeCommand}" Style="{StaticResource AccentButton}"
                                   Margin="8,0,0,0" AutomationProperties.AutomationId="dbc.valueExplorerAnalyze"/>
@@ -155,6 +152,11 @@
                                     MinWidth="220" AutomationProperties.Name="Physical CAN channel for exact raw-code analysis"
                                     AutomationProperties.AutomationId="dbc.valueExplorerChannel"/>
                         </DockPanel>
+                      <ScrollViewer DockPanel.Dock="Top" MaxHeight="130" VerticalScrollBarVisibility="Auto"
+                                    HorizontalScrollBarVisibility="Disabled" Margin="0,0,0,7">
+                      <StackPanel>
+                        <TextBlock Text="{Binding DbcValues.Interpretation}" Style="{StaticResource MutedText}"
+                                   TextWrapping="Wrap" FontSize="10.5" Margin="0,0,0,6"/>
                         <TextBlock Text="{Binding DbcValues.Summary}" TextWrapping="Wrap"
                                    FontWeight="SemiBold" Margin="0,7,0,4"
                                    AutomationProperties.AutomationId="dbc.valueExplorerSummary"/>
@@ -165,7 +167,9 @@
                         <TextBlock Text="{Binding DbcValues.Warning}" TextWrapping="Wrap"
                                    FontSize="10.5" Foreground="{DynamicResource WarningBrush}"
                                    AutomationProperties.AutomationId="dbc.valueExplorerWarning"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                      </StackPanel>
+                      </ScrollViewer>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,7">
                           <Button Content="Open first source frame" Margin="0,0,8,0"
                                   Command="{Binding DbcValues.OpenFirstFrameCommand}"
                                   AutomationProperties.AutomationId="dbc.valueExplorerFirst"/>
@@ -173,7 +177,6 @@
                                   Command="{Binding DbcValues.OpenLastFrameCommand}"
                                   AutomationProperties.AutomationId="dbc.valueExplorerLast"/>
                         </StackPanel>
-                      </StackPanel>
                       <DataGrid ItemsSource="{Binding DbcValues.RawCodes}"
                                 SelectedItem="{Binding DbcValues.SelectedRawCode}"
                                 AutoGenerateColumns="False" IsReadOnly="True"

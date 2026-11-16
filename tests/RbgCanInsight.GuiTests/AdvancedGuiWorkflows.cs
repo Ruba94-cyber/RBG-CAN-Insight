@@ -12,6 +12,48 @@ namespace RbgCanInsight.GuiTests;
 public sealed class AdvancedGuiWorkflows
 {
     [Fact]
+    public void DbcManager_InspectorButtonRemainsVisibleWithManySignals()
+    {
+        using var ui = new GuiSession();
+        ui.ResizeTo(1280, 720);
+        var dbc = "VERSION \"\"\nNS_ :\nBS_:\nBU_: ECM\nBO_ 256 ManySignalsWithALongMessageName: 8 ECM\n" +
+            string.Concat(Enumerable.Range(0, 64).Select(i =>
+                $" SG_ LongSignalNameForLayoutTesting{i} : {i}|1@1+ (1,0) [0|1] \"{new string('u', 150)}\" Vector__XXX\n"));
+        File.WriteAllText(ui.DbcPath, dbc);
+        ui.Navigate("nav.dbc");
+        ui.Click("dbc.load");
+        ui.ChooseFile(ui.DbcPath);
+        ui.AwaitStatus("1 DBC");
+        ui.Navigate("nav.trace");
+        ui.Click("trace.open");
+        ui.ChooseFile(ui.TracePath);
+        ui.AwaitStatus("Trace loaded:");
+        ui.Navigate("nav.dbc");
+        ui.Until(() => ui.Visible("dbc.messagesGrid").FindFirstDescendant(
+            cf => cf.ByControlType(ControlType.DataItem)), "DBC message").Press();
+        var grid = ui.Visible("dbc.signalsGrid");
+        ui.Until(() => grid.FindFirstDescendant(cf => cf.ByControlType(ControlType.DataItem)), "DBC signal").Press();
+        var button = ui.Visible("dbc.openInspector");
+        Assert.True(button.BoundingRectangle.Bottom <= ui.Main.BoundingRectangle.Bottom);
+        Assert.True(grid.BoundingRectangle.Bottom <= button.BoundingRectangle.Top);
+        button.Press();
+        var inspector = ui.WindowWithTitle("DBC signal inspector");
+        inspector.Patterns.Transform.Pattern.Resize(700, 450);
+        ui.Visible("dbc.valueExplorerTab").AsTabItem().Select();
+        var analyze = ui.Visible("dbc.valueExplorerAnalyze");
+        Assert.True(analyze.BoundingRectangle.Left >= inspector.BoundingRectangle.Left);
+        Assert.True(analyze.BoundingRectangle.Right <= inspector.BoundingRectangle.Right);
+        Assert.True(analyze.BoundingRectangle.Top >= inspector.BoundingRectangle.Top);
+        Assert.True(analyze.BoundingRectangle.Bottom <= inspector.BoundingRectangle.Bottom);
+        Assert.True(analyze.IsEnabled);
+        analyze.Press();
+        ui.Until(() => ui.Visible("dbc.valueExplorerGrid")
+            .FindFirstDescendant(cf => cf.ByControlType(ControlType.DataItem)), "observed raw code", 35);
+        Assert.False(analyze.IsOffscreen);
+        Assert.True(analyze.BoundingRectangle.Bottom <= inspector.BoundingRectangle.Bottom);
+    }
+
+    [Fact]
     public void DbcEditor_StagesChangeAndSavesOnlyAnIndependentCopy()
     {
         using var ui = new GuiSession();
